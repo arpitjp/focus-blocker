@@ -338,30 +338,33 @@ async function removeSite(index) {
 }
 
 // Normalize site URL
-// If no protocol, prefix with * to indicate wildcard (blocks all subdomains)
-// If protocol exists, keep as-is (blocks only that specific URL)
+// Always converts to *domain format for consistent blocking
 function normalizeSite(site) {
   const trimmed = site.trim().toLowerCase();
   
-  // Check if it has a protocol
-  const hasProtocol = /^https?:\/\//.test(trimmed);
-  
   // Check if already has * prefix
-  const hasWildcard = trimmed.startsWith('*');
-  
-  if (hasProtocol || hasWildcard) {
-    // Keep as-is, just clean up trailing slash and www
-    return trimmed
-      .replace(/^(https?:\/\/)www\./, '$1')
-      .replace(/\/$/, '');
-  } else {
-    // No protocol and no wildcard - add * prefix to indicate it blocks all subdomains
-    const cleaned = trimmed
-      .replace(/^www\./, '')
-      .replace(/\/$/, '');
-    
-    return '*' + cleaned;
+  if (trimmed.startsWith('*')) {
+    // Already wildcard format, just clean up
+    return trimmed.replace(/\/$/, '');
   }
+  
+  // Check if it has a protocol - extract domain
+  if (/^https?:\/\//.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      const domain = url.hostname.replace(/^www\./, '');
+      return '*' + domain;
+    } catch {
+      // If URL parsing fails, fall through to simple cleaning
+    }
+  }
+  
+  // No protocol - clean up and add * prefix
+  const cleaned = trimmed
+    .replace(/^www\./, '')
+    .replace(/\/$/, '');
+  
+  return '*' + cleaned;
 }
 
 // Allow Enter key to add site

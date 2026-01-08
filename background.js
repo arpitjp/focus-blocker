@@ -203,30 +203,46 @@ async function updateBlockingRules(syncTabs = false) {
           // Wildcard - blocks domain and all subdomains
           // *youtube.com → ||youtube.com (matches youtube.com and all subdomains)
           const domain = site.substring(1); // Remove the * prefix
-          urlFilter = domain;
+          urlFilter = '||' + domain;
           displaySite = domain;
         } else if (site.startsWith('http://') || site.startsWith('https://')) {
-          // Specific URL with protocol - block only this exact URL pattern
-          urlFilter = site;
-          displaySite = site;
+          // URL with protocol - extract domain and block all subdomains
+          // https://youtube.com → ||youtube.com
+          const url = new URL(site);
+          const domain = url.hostname.replace(/^www\./, '');
+          urlFilter = '||' + domain;
+          displaySite = domain;
         } else {
-          // Fallback - treat as domain
-          urlFilter = site;
+          // Fallback - treat as domain with || prefix
+          urlFilter = '||' + site;
         }
         
-        // Use redirect to the blocked page with site info
-          rules.push({
-            id: ruleId++,
-            priority: 1,
-            action: {
+        // Rule for main page navigation (redirect to blocked page)
+        rules.push({
+          id: ruleId++,
+          priority: 1,
+          action: {
             type: 'redirect',
             redirect: {
               url: `${blockedPageUrl}?site=${encodeURIComponent(displaySite)}`
             }
-            },
-            condition: {
+          },
+          condition: {
             urlFilter: urlFilter,
             resourceTypes: ['main_frame', 'sub_frame']
+          }
+        });
+        
+        // Rule for blocking all other resources (media, scripts, images, etc.)
+        rules.push({
+          id: ruleId++,
+          priority: 1,
+          action: {
+            type: 'block'
+          },
+          condition: {
+            urlFilter: urlFilter,
+            resourceTypes: ['media', 'image', 'script', 'stylesheet', 'font', 'xmlhttprequest', 'websocket', 'other']
           }
         });
       });
