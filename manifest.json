@@ -1,14 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Focus",
+  "name": "Focus Mode - Website Blocker for Productivity",
+  "short_name": "Focus Mode",
   "version": "1.0.0",
-  "description": "Block distracting websites and stay focused with an easy toggle",
+  "description": "Block distracting websites like YouTube, Twitter, Reddit & Instagram. Stay focused with one-click toggle, custom timers & auto-unblock. Free productivity tool for work & study.",
   "author": "Arpit Jain <arpitjp@gmail.com>",
   "homepage_url": "https://github.com/arpitjp/focus-blocker",
   "permissions": [
     "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "declarativeNetRequestFeedback",
     "storage",
-    "tabs"
+    "tabs",
+    "webNavigation",
+    "scripting",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -24,6 +30,10 @@
       "128": "icon128.png"
     }
   },
+  "web_accessible_resources": [{
+    "resources": ["blocked.html", "blocked.js", "icon128.png", "content-blocker.js"],
+    "matches": ["<all_urls>"]
+  }],
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",

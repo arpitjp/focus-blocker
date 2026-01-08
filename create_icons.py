@@ -1,31 +1,46 @@
 #!/usr/bin/env python3
 """
-Simple script to create placeholder icons for the Chrome extension.
+Resize the provided icon image to required Chrome extension sizes.
 Requires Pillow: pip install Pillow
 """
 
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image
+    import os
     
+    # Look for source icon - could be various names
+    source_files = ['icon_source.png', 'icon.png', 'source_icon.png', 'icon128.png']
+    source_image = None
+    
+    for f in source_files:
+        if os.path.exists(f):
+            source_image = f
+            break
+    
+    if source_image is None:
+        print("No source image found. Please save your icon as 'icon_source.png'")
+        exit(1)
+    
+    print(f"Using source image: {source_image}")
+    
+    # Open the source image
+    img = Image.open(source_image)
+    
+    # Convert to RGBA if necessary
+    if img.mode != 'RGBA':
+        img = img.convert('RGBA')
+    
+    # Resize to required sizes
     sizes = [16, 48, 128]
-    color = (102, 126, 234)  # #667eea in RGB
     
     for size in sizes:
-        # Create a new image with the color
-        img = Image.new('RGB', (size, size), color)
-        
-        # Draw a simple "B" for Blocker
-        draw = ImageDraw.Draw(img)
-        # Draw a border
-        border_width = max(1, size // 16)
-        draw.rectangle([border_width, border_width, size - border_width - 1, size - border_width - 1], 
-                      outline=(255, 255, 255), width=border_width)
-        
-        # Save the icon
-        img.save(f'icon{size}.png')
-        print(f'Created icon{size}.png')
+        # Use high-quality resampling
+        resized = img.resize((size, size), Image.Resampling.LANCZOS)
+        resized.save(f'icon{size}.png', 'PNG')
+        print(f'Created icon{size}.png ({size}x{size})')
     
-    print('\nIcons created successfully!')
+    print('\n✅ Icons created successfully!')
+    print('Reload the extension in chrome://extensions/ to see the new icons.')
     
 except ImportError:
     print("Pillow is not installed. Installing...")
@@ -34,9 +49,6 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
     print("Please run this script again.")
 except Exception as e:
-    print(f"Error creating icons: {e}")
-    print("\nYou can also create simple colored square images manually:")
-    print("- icon16.png: 16x16 pixels, color #667eea")
-    print("- icon48.png: 48x48 pixels, color #667eea")
-    print("- icon128.png: 128x128 pixels, color #667eea")
-
+    print(f"Error: {e}")
+    import traceback
+    traceback.print_exc()

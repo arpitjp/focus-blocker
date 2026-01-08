@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Focus</title>
+  <title>Focus Mode - Website Blocker</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="container">
-    <h1>Focus</h1>
+    <h1>Focus Mode</h1>
     
     <div class="toggle-section">
       <label class="toggle-label">
@@ -16,7 +16,21 @@
         <input type="checkbox" id="blockingToggle" class="toggle-input">
         <span class="toggle-slider"></span>
       </label>
-      <p class="status-text" id="statusText">Off</p>
+      <div class="duration-container" id="durationContainer" style="display: none;">
+        <select id="durationSelect" class="duration-select">
+          <option value="infinite">∞ Infinite</option>
+          <option value="15">15 minutes</option>
+          <option value="30">30 minutes</option>
+          <option value="60">1 hour</option>
+          <option value="120">2 hours</option>
+          <option value="custom">Custom</option>
+        </select>
+        <div class="custom-duration" id="customDuration" style="display: none;">
+          <input type="number" id="customMinutes" class="custom-input" placeholder="Minutes" min="1" max="1440">
+          <span class="custom-label">min</span>
+        </div>
+      </div>
+      <p class="timer-text" id="timerText" style="display: none;"></p>
     </div>
 
     <div class="blocked-sites-section">

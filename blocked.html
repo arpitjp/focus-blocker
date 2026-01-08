@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocked - Focus Mode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      overflow: hidden;
+    }
+    
+    .container {
+      text-align: center;
+      padding: 40px;
+      max-width: 500px;
+    }
+    
+    .icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 24px auto;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      color: #a0aec0;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    
+    .blocked-site {
+      display: inline-block;
+      background: rgba(102, 126, 234, 0.2);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #667eea;
+      font-weight: 500;
+      margin-bottom: 32px;
+      word-break: break-all;
+    }
+    
+    
+    .timer {
+      display: none;
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 32px;
+    }
+    
+    .timer-label {
+      font-size: 12px;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    
+    .timer-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #667eea;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .timer-infinite {
+      font-size: 14px;
+      color: #a0aec0;
+    }
+    
+    .branding {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #4a5568;
+      font-size: 13px;
+      text-decoration: none;
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .branding:hover {
+      color: #667eea;
+    }
+    
+    .branding-icon {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px;
+    }
+    
+    
+    .pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="pattern"></div>
+  <div class="container">
+    <div class="icon"><img src="icon128.png" alt="Focus"></div>
+    <h1>Stay Focused!</h1>
+    <p class="subtitle">This website has been blocked to help you stay productive.</p>
+    <div class="blocked-site" id="blockedSite"></div>
+    <div class="timer" id="timer">
+      <div class="timer-label">Blocking ends in</div>
+      <div class="timer-value" id="timerValue"></div>
+    </div>
+    <a href="#" class="branding" id="openSettings">
+      <div class="branding-icon"></div>
+      <span>Focus Mode</span>
+    </a>
+  </div>
+  
+  <script src="blocked.js"></script>
+</body>
+</html>
+
