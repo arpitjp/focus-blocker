@@ -11,33 +11,46 @@ const timerText = document.getElementById('timerText');
 
 let countdownInterval = null;
 
-// Save to both sync (Google account) and local storage for persistence
-async function saveToBothStorages(data) {
+// Save to sync storage (persists across uninstall/reinstall with Chrome sync enabled)
+async function saveToStorage(data) {
   try {
-    // Save to sync storage (Google account - syncs across devices)
+    // Save to sync storage - this persists across devices and reinstalls
     await chrome.storage.sync.set(data);
-    // Also save to local storage (persists across uninstall/reinstall)
-    await chrome.storage.local.set(data);
+    console.log('Saved to sync storage:', Object.keys(data));
   } catch (error) {
     console.error('Error saving to sync storage:', error);
-    // If sync fails (quota exceeded), at least save locally
-    await chrome.storage.local.set(data);
+    // If sync fails (quota exceeded, not signed in), data won't persist across reinstall
+    // But will work within the current install
   }
 }
 
-// Load saved state from both sync and local storage
-async function loadState() {
-  // Check both sync (Google account) and local storage
+// Load saved state from sync storage (persists across uninstall/reinstall with Chrome sync)
+async function loadState(retryCount = 0) {
+  // Get from sync storage - this persists across uninstall/reinstall if Chrome sync is enabled
   const syncResult = await chrome.storage.sync.get(['blockingEnabled', 'blockedSites', 'blockingEndTime', 'blockingDuration', 'lastDurationOption', 'lastCustomMinutes']);
-  const localResult = await chrome.storage.local.get(['blockingEnabled', 'blockedSites', 'blockingEndTime', 'blockingDuration', 'lastDurationOption', 'lastCustomMinutes']);
   
-  // Prefer sync storage, fallback to local
-  const blockingEnabled = syncResult.blockingEnabled ?? localResult.blockingEnabled ?? false;
-  const blockedSites = syncResult.blockedSites ?? localResult.blockedSites ?? [];
-  const blockingEndTime = syncResult.blockingEndTime ?? localResult.blockingEndTime ?? null;
-  const blockingDuration = syncResult.blockingDuration ?? localResult.blockingDuration ?? null;
-  const lastDurationOption = syncResult.lastDurationOption ?? localResult.lastDurationOption ?? 'infinite';
-  const lastCustomMinutes = syncResult.lastCustomMinutes ?? localResult.lastCustomMinutes ?? null;
+  // Check if sync has data
+  const hasSyncData = syncResult.blockedSites && syncResult.blockedSites.length > 0;
+  
+  // If no sync data and this is first load, retry after a delay (sync might not be ready yet)
+  if (!hasSyncData && retryCount < 3) {
+    console.log(`No sync data found, retrying... (attempt ${retryCount + 1})`);
+    setTimeout(() => loadState(retryCount + 1), 500);
+    if (retryCount === 0) {
+      // Show empty state immediately, will update when data arrives
+      displayBlockedSites([]);
+    }
+    return;
+  }
+  
+  const blockingEnabled = syncResult.blockingEnabled ?? false;
+  const blockedSites = syncResult.blockedSites ?? [];
+  const blockingEndTime = syncResult.blockingEndTime ?? null;
+  const blockingDuration = syncResult.blockingDuration ?? null;
+  const lastDurationOption = syncResult.lastDurationOption ?? 'infinite';
+  const lastCustomMinutes = syncResult.lastCustomMinutes ?? null;
+  
+  console.log('Loaded state from sync:', { blockingEnabled, blockedSites: blockedSites.length });
   
   blockingToggle.checked = blockingEnabled;
   displayBlockedSites(blockedSites);
@@ -62,10 +75,15 @@ async function loadState() {
     durationContainer.style.display = 'none';
     stopCountdown();
   }
-  
-  // Ensure both storages are in sync
-  await saveToBothStorages({ blockingEnabled, blockedSites, blockingEndTime, blockingDuration });
 }
+
+// Listen for storage changes (in case sync data arrives after initial load)
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'sync' && changes.blockedSites) {
+    console.log('Sync storage updated, reloading state...');
+    loadState();
+  }
+});
 
 
 // Format time remaining
@@ -165,7 +183,7 @@ async function handleToggleChange() {
   const selectedDuration = durationSelect.value;
   
   // Always save the last selected duration option
-  await saveToBothStorages({ 
+  await saveToStorage({ 
     lastDurationOption: selectedDuration,
     lastCustomMinutes: selectedDuration === 'custom' ? customMinutes.value : null
   });
@@ -175,7 +193,7 @@ async function handleToggleChange() {
     durationContainer.style.display = 'block';
     
     // Always enable blocking first
-    await saveToBothStorages({ blockingEnabled: enabled });
+    await saveToStorage({ blockingEnabled: enabled });
     chrome.runtime.sendMessage({ action: 'updateBlocking', enabled });
     
     // Get duration and set timer if valid (null for infinite)
@@ -183,7 +201,7 @@ async function handleToggleChange() {
     if (durationMinutes) {
       // Timed blocking
       const endTime = Date.now() + (durationMinutes * 60 * 1000);
-      await saveToBothStorages({ 
+      await saveToStorage({ 
         blockingEndTime: endTime,
         blockingDuration: selectedDuration,
         customMinutes: selectedDuration === 'custom' ? durationMinutes : null
@@ -199,7 +217,7 @@ async function handleToggleChange() {
       });
     } else {
       // Infinite or no valid duration - enable without timer
-      await saveToBothStorages({ 
+      await saveToStorage({ 
         blockingEndTime: null,
         blockingDuration: selectedDuration
       });
@@ -210,7 +228,7 @@ async function handleToggleChange() {
     durationContainer.style.display = 'none';
     customDuration.style.display = 'none';
     stopCountdown();
-    await saveToBothStorages({ 
+    await saveToStorage({ 
       blockingEnabled: enabled,
       blockingEndTime: null,
       blockingDuration: null
@@ -227,7 +245,7 @@ durationSelect.addEventListener('change', async () => {
   const selectedValue = durationSelect.value;
   
   // Save the last selected option
-  await saveToBothStorages({ 
+  await saveToStorage({ 
     lastDurationOption: selectedValue,
     lastCustomMinutes: selectedValue === 'custom' ? customMinutes.value : null
   });
@@ -247,7 +265,7 @@ durationSelect.addEventListener('change', async () => {
 // Handle custom minutes input
 customMinutes.addEventListener('input', async () => {
   // Save the custom minutes value
-  await saveToBothStorages({ lastCustomMinutes: customMinutes.value });
+  await saveToStorage({ lastCustomMinutes: customMinutes.value });
   
   if (blockingToggle.checked && durationSelect.value === 'custom') {
     const minutes = getDurationMinutes();
@@ -290,7 +308,7 @@ addSiteBtn.addEventListener('click', async () => {
   }
 
   blockedSites.push(normalizedSite);
-  await saveToBothStorages({ blockedSites });
+  await saveToStorage({ blockedSites });
   
   siteInput.value = '';
   displayBlockedSites(blockedSites);
@@ -309,7 +327,7 @@ async function removeSite(index) {
   const localResult = await chrome.storage.local.get(['blockedSites']);
   const blockedSites = syncResult.blockedSites ?? localResult.blockedSites ?? [];
   blockedSites.splice(index, 1);
-  await saveToBothStorages({ blockedSites });
+  await saveToStorage({ blockedSites });
   displayBlockedSites(blockedSites);
   
   // Notify background script to update blocking rules
