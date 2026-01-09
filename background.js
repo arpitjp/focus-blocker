@@ -178,11 +178,23 @@ async function reblockTabsAfterReload() {
 }
 
 // Helper function to check if URL matches a blocked site
+// *domain → matches anywhere (all subdomains)
+// https://domain → exact domain match only (NOT subdomains)
 function matchesSite(urlLower, site) {
   if (site.startsWith('*')) {
+    // Wildcard: match anywhere in URL (includes subdomains like music.youtube.com)
     return urlLower.includes(site.substring(1).toLowerCase());
   } else if (site.startsWith('http://') || site.startsWith('https://')) {
-    return urlLower.startsWith(site.toLowerCase());
+    // Full URL: exact domain match only, NOT subdomains
+    try {
+      const ruleUrl = new URL(site.toLowerCase());
+      const pageUrl = new URL(urlLower);
+      const ruleDomain = ruleUrl.hostname.replace(/^www\./, '');
+      const pageDomain = pageUrl.hostname.replace(/^www\./, '');
+      return ruleDomain === pageDomain;
+    } catch {
+      return urlLower.startsWith(site.toLowerCase());
+    }
   } else {
     return urlLower.includes(site.toLowerCase());
   }
@@ -287,50 +299,62 @@ async function updateBlockingRules(syncTabs = false) {
       const blockedPageUrl = chrome.runtime.getURL('blocked.html');
 
       for (const site of blockedSites) {
-        let urlFilter;
         let displaySite = site;
+        let urlFilters = [];
         
         if (site.startsWith('*')) {
+          // Wildcard: match all subdomains using || anchor
           const domain = site.substring(1);
-          urlFilter = '||' + domain;
+          urlFilters = ['||' + domain];
           displaySite = domain;
         } else if (site.startsWith('http://') || site.startsWith('https://')) {
+          // Full URL: exact domain match only (NOT subdomains)
+          // Use | anchor with trailing / to ensure domain boundary (prevents matching youtube.comedy.com)
           try {
             const url = new URL(site);
             const domain = url.hostname.replace(/^www\./, '');
-            urlFilter = '||' + domain;
+            urlFilters = [
+              '|https://' + domain + '/',
+              '|http://' + domain + '/',
+              '|https://www.' + domain + '/',
+              '|http://www.' + domain + '/'
+            ];
             displaySite = domain;
           } catch {
-            urlFilter = '||' + site;
+            urlFilters = ['||' + site];
           }
         } else {
-          urlFilter = '||' + site;
+          // Plain domain (shouldn't happen as normalizeSite adds *)
+          urlFilters = ['||' + site];
         }
         
-        // Rule for main page navigation
-        rules.push({
-          id: ruleId++,
-          priority: 1,
-          action: {
-            type: 'redirect',
-            redirect: { url: `${blockedPageUrl}?site=${encodeURIComponent(displaySite)}` }
-          },
-          condition: {
-            urlFilter: urlFilter,
-            resourceTypes: ['main_frame', 'sub_frame']
-          }
-        });
-        
-        // Rule for blocking other resources
-        rules.push({
-          id: ruleId++,
-          priority: 1,
-          action: { type: 'block' },
-          condition: {
-            urlFilter: urlFilter,
-            resourceTypes: ['media', 'image', 'script', 'stylesheet', 'font', 'xmlhttprequest', 'websocket', 'other']
-          }
-        });
+        // Create rules for each URL filter pattern
+        for (const urlFilter of urlFilters) {
+          // Rule for main page navigation
+          rules.push({
+            id: ruleId++,
+            priority: 1,
+            action: {
+              type: 'redirect',
+              redirect: { url: `${blockedPageUrl}?site=${encodeURIComponent(displaySite)}` }
+            },
+            condition: {
+              urlFilter: urlFilter,
+              resourceTypes: ['main_frame', 'sub_frame']
+            }
+          });
+          
+          // Rule for blocking other resources
+          rules.push({
+            id: ruleId++,
+            priority: 1,
+            action: { type: 'block' },
+            condition: {
+              urlFilter: urlFilter,
+              resourceTypes: ['media', 'image', 'script', 'stylesheet', 'font', 'xmlhttprequest', 'websocket', 'other']
+            }
+          });
+        }
       }
     }
 
@@ -364,7 +388,7 @@ async function syncOpenTabs(blockingEnabled, blockedSites) {
       
       const isBlockedPage = tab.url.includes('blocked.html') && tab.url.includes(chrome.runtime.id);
       
-      // If blocking is disabled, unblock blocked pages
+      // If blocking is disabled, unblock blocked pages and unmute
       if (!blockingEnabled || blockedSites.length === 0) {
         if (isBlockedPage) {
           chrome.tabs.goBack(tab.id).catch(() => {});
@@ -380,7 +404,16 @@ async function syncOpenTabs(blockingEnabled, blockedSites) {
       const isBlocked = blockedSites.some(site => matchesSite(urlLower, site));
       
       if (isBlocked) {
-        await injectBlockerScript(tab.id);
+        // Mute the tab immediately to stop audio
+        chrome.tabs.update(tab.id, { muted: true }).catch(() => {});
+        
+        // Try to inject blocker script
+        const injected = await injectBlockerScript(tab.id);
+        
+        // If script injection failed, reload the tab to trigger declarativeNetRequest redirect
+        if (!injected) {
+          chrome.tabs.reload(tab.id).catch(() => {});
+        }
       }
     }
   } catch (e) {
@@ -425,13 +458,16 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 // Inject the blocker content script into a tab
+// Returns true if injection succeeded, false otherwise
 async function injectBlockerScript(tabId) {
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
       files: ['content-blocker.js']
     });
+    return true;
   } catch (e) {
-    // Script injection failed - likely invalid tab
+    // Script injection failed - likely invalid tab or restricted page
+    return false;
   }
 }

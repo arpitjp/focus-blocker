@@ -16,30 +16,76 @@
 
   // Stop all media on the page
   function killAllMedia() {
-    // Stop all video elements
-    const videos = document.getElementsByTagName('video');
-    for (let i = 0; i < videos.length; i++) {
-      const video = videos[i];
-      video.pause();
-      video.muted = true;
-      video.src = '';
-      video.srcObject = null;
-    }
+    // Stop all video elements (including in shadow DOM)
+    const killVideos = (root) => {
+      const videos = root.querySelectorAll ? root.querySelectorAll('video') : root.getElementsByTagName('video');
+      for (const video of videos) {
+        try {
+          video.pause();
+          video.muted = true;
+          video.src = '';
+          video.srcObject = null;
+          video.remove();
+        } catch (e) {}
+      }
+    };
     
     // Stop all audio elements
-    const audios = document.getElementsByTagName('audio');
-    for (let i = 0; i < audios.length; i++) {
-      const audio = audios[i];
-      audio.pause();
-      audio.muted = true;
-      audio.src = '';
-      audio.srcObject = null;
-    }
+    const killAudios = (root) => {
+      const audios = root.querySelectorAll ? root.querySelectorAll('audio') : root.getElementsByTagName('audio');
+      for (const audio of audios) {
+        try {
+          audio.pause();
+          audio.muted = true;
+          audio.src = '';
+          audio.srcObject = null;
+          audio.remove();
+        } catch (e) {}
+      }
+    };
+    
+    // Kill media in main document
+    killVideos(document);
+    killAudios(document);
+    
+    // Kill media in shadow DOMs (YouTube uses these)
+    const walkShadowRoots = (node) => {
+      if (node.shadowRoot) {
+        killVideos(node.shadowRoot);
+        killAudios(node.shadowRoot);
+        node.shadowRoot.querySelectorAll('*').forEach(walkShadowRoots);
+      }
+      node.querySelectorAll && node.querySelectorAll('*').forEach(child => {
+        if (child.shadowRoot) {
+          killVideos(child.shadowRoot);
+          killAudios(child.shadowRoot);
+          walkShadowRoots(child);
+        }
+      });
+    };
+    try { walkShadowRoots(document.body); } catch (e) {}
     
     // Remove all iframes (YouTube embeds, etc.)
     const iframes = document.getElementsByTagName('iframe');
-    for (let i = 0; i < iframes.length; i++) {
-      iframes[i].src = 'about:blank';
+    for (let i = iframes.length - 1; i >= 0; i--) {
+      try {
+        iframes[i].src = 'about:blank';
+        iframes[i].remove();
+      } catch (e) {}
+    }
+    
+    // Suspend AudioContext instances (Web Audio API)
+    if (window.AudioContext || window.webkitAudioContext) {
+      try {
+        // Override to prevent new audio contexts
+        const OriginalAudioContext = window.AudioContext || window.webkitAudioContext;
+        window.AudioContext = function() {
+          const ctx = new OriginalAudioContext();
+          ctx.suspend();
+          return ctx;
+        };
+        window.webkitAudioContext = window.AudioContext;
+      } catch (e) {}
     }
   }
 
@@ -57,11 +103,11 @@
       mediaObserver.disconnect();
       mediaObserver = null;
     }
-    if (storageListener) {
+    if (storageListener && chrome.storage?.onChanged) {
       chrome.storage.onChanged.removeListener(storageListener);
       storageListener = null;
     }
-    if (messageListener) {
+    if (messageListener && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.removeListener(messageListener);
       messageListener = null;
     }
@@ -89,7 +135,9 @@
       updateTimerDisplay(changes.blockingEndTime.newValue);
     }
   };
-  chrome.storage.onChanged.addListener(storageListener);
+  if (chrome.storage?.onChanged) {
+    chrome.storage.onChanged.addListener(storageListener);
+  }
   
   // Message listener for direct updates from background
   messageListener = (message) => {
@@ -101,7 +149,9 @@
       }
     }
   };
-  chrome.runtime.onMessage.addListener(messageListener);
+  if (chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener(messageListener);
+  }
   
   // Update timer display
   function updateTimerDisplay(endTime) {
@@ -151,7 +201,15 @@
   }
 
   // Get blocking info from storage
+  if (!chrome.storage?.sync) {
+    cleanup();
+    return;
+  }
   chrome.storage.sync.get(['blockingEnabled', 'blockedSites', 'blockingEndTime'], (syncResult) => {
+    if (!chrome.storage?.local) {
+      cleanup();
+      return;
+    }
     chrome.storage.local.get(['blockingEnabled', 'blockedSites', 'blockingEndTime'], (localResult) => {
       const enabled = syncResult.blockingEnabled ?? localResult.blockingEnabled ?? false;
       const blockedSites = syncResult.blockedSites ?? localResult.blockedSites ?? [];
@@ -165,11 +223,23 @@
       const currentUrl = window.location.href.toLowerCase();
       
       // Check if current site is blocked
+      // *domain → matches anywhere (all subdomains)
+      // https://domain → exact domain match only (NOT subdomains)
       const matchedSite = blockedSites.find(site => {
         if (site.startsWith('*')) {
+          // Wildcard: match anywhere in URL (includes subdomains like music.youtube.com)
           return currentUrl.includes(site.substring(1).toLowerCase());
         } else if (site.startsWith('http://') || site.startsWith('https://')) {
-          return currentUrl.startsWith(site.toLowerCase());
+          // Full URL: exact domain match only, NOT subdomains
+          try {
+            const ruleUrl = new URL(site.toLowerCase());
+            const pageUrl = new URL(currentUrl);
+            const ruleDomain = ruleUrl.hostname.replace(/^www\./, '');
+            const pageDomain = pageUrl.hostname.replace(/^www\./, '');
+            return ruleDomain === pageDomain;
+          } catch {
+            return currentUrl.startsWith(site.toLowerCase());
+          }
         } else {
           return currentUrl.includes(site.toLowerCase());
         }

@@ -277,23 +277,23 @@ customMinutes.addEventListener('keypress', (e) => {
 });
 
 // Normalize site URL
+// youtube.com → *youtube.com (wildcard, blocks all subdomains)
+// *youtube.com → *youtube.com (wildcard, blocks all subdomains)
+// https://youtube.com → https://youtube.com (exact domain only, NOT subdomains)
 function normalizeSite(site) {
   const trimmed = site.trim().toLowerCase();
   
+  // Explicit wildcard - keep as-is
   if (trimmed.startsWith('*')) {
     return trimmed.replace(/\/$/, '');
   }
   
+  // Full URL with protocol - keep as-is for exact domain matching
   if (/^https?:\/\//.test(trimmed)) {
-    try {
-      const url = new URL(trimmed);
-      const domain = url.hostname.replace(/^www\./, '');
-      return '*' + domain;
-    } catch {
-      // Fall through to simple cleaning
-    }
+    return trimmed.replace(/\/$/, '');
   }
   
+  // Plain domain - add * prefix for wildcard matching
   const cleaned = trimmed.replace(/^www\./, '').replace(/\/$/, '');
   return '*' + cleaned;
 }
