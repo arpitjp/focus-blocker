@@ -110,7 +110,7 @@
     if (!timerValue) return;
     
     if (!endTime) {
-      timerValue.textContent = '∞ Until you turn it off';
+      timerValue.textContent = '∞';
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -222,97 +222,114 @@
         }
         .focus-blocker-container {
           text-align: center !important;
-          padding: 60px !important;
-          max-width: 580px !important;
+          padding: 48px !important;
+          max-width: 600px !important;
         }
-        .focus-blocker-icon {
-          width: 88px !important;
-          height: 88px !important;
-          margin: 0 auto 40px auto !important;
-          background: rgba(102, 126, 234, 0.15) !important;
-          border-radius: 24px !important;
+        .focus-blocker-header {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          animation: focus-pulse 2s ease-in-out infinite !important;
+          gap: 20px !important;
+          margin-bottom: 16px !important;
         }
-        @keyframes focus-pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.8; }
+        .focus-blocker-icon {
+          width: 64px !important;
+          height: 64px !important;
+          background: rgba(102, 126, 234, 0.15) !important;
+          border-radius: 16px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-shrink: 0 !important;
         }
         .focus-blocker-icon svg {
-          width: 44px !important;
-          height: 44px !important;
+          width: 32px !important;
+          height: 32px !important;
         }
         .focus-blocker-title {
-          font-size: 36px !important;
+          font-size: 32px !important;
           font-weight: 700 !important;
-          margin-bottom: 20px !important;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
           -webkit-background-clip: text !important;
           -webkit-text-fill-color: transparent !important;
           background-clip: text !important;
         }
         .focus-blocker-subtitle {
-          font-size: 17px !important;
+          font-size: 16px !important;
           color: #a0aec0 !important;
-          margin-bottom: 40px !important;
-          line-height: 1.6 !important;
+          margin-bottom: 32px !important;
+          line-height: 1.5 !important;
+        }
+        .focus-blocker-info {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 24px !important;
+          margin-bottom: 36px !important;
+          flex-wrap: wrap !important;
         }
         .focus-blocker-site {
           display: inline-block !important;
-          background: rgba(102, 126, 234, 0.15) !important;
-          border: 1px solid rgba(102, 126, 234, 0.25) !important;
-          padding: 12px 28px !important;
-          border-radius: 24px !important;
-          font-size: 15px !important;
+          background: rgba(102, 126, 234, 0.12) !important;
+          border: 1px solid rgba(102, 126, 234, 0.2) !important;
+          padding: 10px 24px !important;
+          border-radius: 20px !important;
+          font-size: 14px !important;
           color: #667eea !important;
           font-weight: 500 !important;
-          margin-bottom: 40px !important;
         }
         .focus-blocker-timer {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 12px !important;
           background: rgba(102, 126, 234, 0.08) !important;
           border: 1px solid rgba(102, 126, 234, 0.15) !important;
-          border-radius: 16px !important;
-          padding: 28px 48px !important;
-          margin-bottom: 40px !important;
+          border-radius: 20px !important;
+          padding: 10px 24px !important;
         }
         .focus-blocker-timer-label {
-          font-size: 12px !important;
+          font-size: 11px !important;
           color: #718096 !important;
           text-transform: uppercase !important;
-          letter-spacing: 1.5px !important;
-          margin-bottom: 10px !important;
+          letter-spacing: 1px !important;
         }
         .focus-blocker-timer-value {
-          font-size: 32px !important;
+          font-size: 18px !important;
           font-weight: 700 !important;
           color: #667eea !important;
+        }
+        .focus-blocker-footer {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 24px !important;
         }
         .focus-blocker-branding {
           display: flex !important;
           align-items: center !important;
-          justify-content: center !important;
-          gap: 10px !important;
+          gap: 8px !important;
           color: #4a5568 !important;
-          font-size: 13px !important;
+          font-size: 12px !important;
           cursor: pointer !important;
           transition: color 0.2s ease !important;
-          margin-bottom: 16px !important;
         }
         .focus-blocker-branding:hover {
           color: #667eea !important;
         }
         .focus-blocker-branding-icon {
-          width: 18px !important;
-          height: 18px !important;
+          width: 16px !important;
+          height: 16px !important;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-          border-radius: 4px !important;
+          border-radius: 3px !important;
+        }
+        .focus-blocker-divider {
+          width: 1px !important;
+          height: 16px !important;
+          background: rgba(255,255,255,0.1) !important;
         }
         .focus-blocker-coffee {
           display: inline-flex !important;
           align-items: center !important;
-          justify-content: center !important;
           gap: 6px !important;
           color: #4a5568 !important;
           font-size: 12px !important;
@@ -334,29 +351,36 @@
         }
       </style>
       <div class="focus-blocker-container">
-        <div class="focus-blocker-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-          </svg>
+        <div class="focus-blocker-header">
+          <div class="focus-blocker-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <h1 class="focus-blocker-title">Stay Focused!</h1>
         </div>
-        <h1 class="focus-blocker-title">Stay Focused!</h1>
         <p class="focus-blocker-subtitle">This website has been blocked to help you stay productive.</p>
-        <div class="focus-blocker-site">${escapeHtml(site)}</div>
-        <div class="focus-blocker-timer" id="focus-blocker-timer">
-          <div class="focus-blocker-timer-label">Blocking ends in</div>
-          <div class="focus-blocker-timer-value" id="focus-blocker-timer-value">∞ Until you turn it off</div>
+        <div class="focus-blocker-info">
+          <div class="focus-blocker-site">${escapeHtml(site)}</div>
+          <div class="focus-blocker-timer" id="focus-blocker-timer">
+            <div class="focus-blocker-timer-label">Ends in</div>
+            <div class="focus-blocker-timer-value" id="focus-blocker-timer-value">∞</div>
+          </div>
         </div>
-        <div class="focus-blocker-branding" id="focus-blocker-branding">
-          <div class="focus-blocker-branding-icon"></div>
-          <span>Focus Mode</span>
+        <div class="focus-blocker-footer">
+          <div class="focus-blocker-branding" id="focus-blocker-branding">
+            <div class="focus-blocker-branding-icon"></div>
+            <span>Focus Mode</span>
+          </div>
+          <div class="focus-blocker-divider"></div>
+          <a href="https://buymeacoffee.com/arpitjpn" target="_blank" class="focus-blocker-coffee">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2 21V19H20V21H2ZM20 8V5H3V8H2V4H21V8H20ZM18 17H3V8H18V17ZM19 8H21C21.55 8 22.021 8.196 22.413 8.588C22.805 8.98 23.001 9.451 23.001 10V13C23.001 13.55 22.805 14.021 22.413 14.413C22.021 14.805 21.55 15.001 21 15.001H19V13.001H21V10H19V8Z"/>
+            </svg>
+            <span>Buy me a coffee</span>
+          </a>
         </div>
-        <a href="https://buymeacoffee.com/arpitjpn" target="_blank" class="focus-blocker-coffee">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M2 21V19H20V21H2ZM20 8V5H3V8H2V4H21V8H20ZM18 17H3V8H18V17ZM19 8H21C21.55 8 22.021 8.196 22.413 8.588C22.805 8.98 23.001 9.451 23.001 10V13C23.001 13.55 22.805 14.021 22.413 14.413C22.021 14.805 21.55 15.001 21 15.001H19V13.001H21V10H19V8Z"/>
-          </svg>
-          <span>Buy me a coffee</span>
-        </a>
       </div>
     `;
 
