@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blocked - Focus Mode</title>
   <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a24;
+      --text-primary: #f0f0f5;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --accent: #5b7fff;
+      --accent-glow: rgba(91, 127, 255, 0.15);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -13,26 +24,26 @@
     
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg-primary);
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: var(--text-primary);
       overflow: hidden;
     }
     
     .container {
       text-align: center;
       padding: 40px;
-      max-width: 500px;
+      max-width: 440px;
     }
     
     .icon {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 24px auto;
-      animation: pulse 2s ease-in-out infinite;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 28px auto;
+      opacity: 0.9;
     }
     
     .icon img {
@@ -41,94 +52,85 @@
       object-fit: contain;
     }
     
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-    
     h1 {
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
     }
     
     .subtitle {
-      font-size: 18px;
-      color: #a0aec0;
+      font-size: 15px;
+      color: var(--text-secondary);
       margin-bottom: 32px;
-      line-height: 1.6;
+      line-height: 1.5;
+      font-weight: 400;
     }
     
     .blocked-site {
       display: inline-block;
-      background: rgba(102, 126, 234, 0.2);
-      border: 1px solid rgba(102, 126, 234, 0.3);
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 14px;
-      color: #667eea;
+      background: var(--bg-secondary);
+      padding: 10px 20px;
+      font-size: 13px;
+      color: var(--accent);
       font-weight: 500;
       margin-bottom: 32px;
       word-break: break-all;
+      letter-spacing: 0.2px;
     }
-    
     
     .timer {
       display: none;
-      background: rgba(102, 126, 234, 0.1);
-      border: 1px solid rgba(102, 126, 234, 0.2);
-      border-radius: 12px;
-      padding: 16px 24px;
+      background: var(--bg-secondary);
+      padding: 20px 28px;
       margin-bottom: 32px;
     }
     
     .timer-label {
-      font-size: 12px;
-      color: #718096;
+      font-size: 11px;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       margin-bottom: 8px;
+      font-weight: 500;
     }
     
     .timer-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #667eea;
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--accent);
       font-variant-numeric: tabular-nums;
+      letter-spacing: -0.5px;
     }
     
     .timer-infinite {
       font-size: 14px;
-      color: #a0aec0;
+      color: var(--text-secondary);
     }
     
     .branding {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
-      color: #4a5568;
-      font-size: 13px;
+      color: var(--text-muted);
+      font-size: 12px;
       text-decoration: none;
-      transition: color 0.2s ease;
+      transition: color 0.15s ease;
       cursor: pointer;
+      font-weight: 500;
+      letter-spacing: 0.3px;
     }
     
     .branding:hover {
-      color: #667eea;
+      color: var(--accent);
     }
     
     .branding-icon {
-      width: 20px;
-      height: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 4px;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
     }
-    
     
     .pattern {
       position: fixed;
@@ -137,9 +139,22 @@
       right: 0;
       bottom: 0;
       background-image: 
-        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 50%);
+        radial-gradient(ellipse at 30% 20%, var(--accent-glow) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(91, 127, 255, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .grid-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+      background-size: 60px 60px;
       pointer-events: none;
       z-index: -1;
     }
@@ -147,13 +162,14 @@
 </head>
 <body>
   <div class="pattern"></div>
+  <div class="grid-overlay"></div>
   <div class="container">
     <div class="icon"><img src="icon128.png" alt="Focus"></div>
-    <h1>Stay Focused!</h1>
-    <p class="subtitle">This website has been blocked to help you stay productive.</p>
+    <h1>Focus Mode</h1>
+    <p class="subtitle">This site is blocked to help you stay on track.</p>
     <div class="blocked-site" id="blockedSite"></div>
     <div class="timer" id="timer">
-      <div class="timer-label">Blocking ends in</div>
+      <div class="timer-label">Time Remaining</div>
       <div class="timer-value" id="timerValue"></div>
     </div>
     <a href="#" class="branding" id="openSettings">
@@ -165,4 +181,3 @@
   <script src="blocked.js"></script>
 </body>
 </html>
-

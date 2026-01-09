@@ -10,6 +10,34 @@ let initialized = false;
 // Mutex to prevent concurrent rule updates
 let isUpdating = false;
 
+// Keep offscreen document ready
+let offscreenReady = false;
+
+async function ensureOffscreen() {
+  if (offscreenReady) return;
+  try {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['AUDIO_PLAYBACK'],
+      justification: 'Play chime when focus session ends'
+    });
+    offscreenReady = true;
+  } catch (e) {
+    if (e.message?.includes('already exists')) {
+      offscreenReady = true;
+    }
+  }
+}
+
+// Pre-create offscreen document on startup
+ensureOffscreen();
+
+// Play completion chime
+async function playChime() {
+  await ensureOffscreen();
+  chrome.runtime.sendMessage({ action: 'offscreen_playChime' }).catch(() => {});
+}
+
 // Update the extension badge to show on/off status
 async function updateBadge(enabled) {
   if (enabled) {
@@ -41,11 +69,71 @@ async function initialize() {
 }
 
 // Handle alarms
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  console.log('⏰ Alarm fired:', alarm.name);
   if (alarm.name === 'checkBlockingTimer') {
     checkBlockingTimer();
   }
+  if (alarm.name === 'focusTimerEnd') {
+    // Timer ended - disable blocking and play chime
+    console.log('⏰ Focus timer ended!');
+    await chrome.storage.sync.set({ 
+      blockingEnabled: false,
+      blockingEndTime: null,
+      blockingDuration: null
+    });
+    await chrome.storage.local.set({ 
+      blockingEnabled: false,
+      blockingEndTime: null,
+      blockingDuration: null
+    });
+    await updateBlockingRules(true);
+    playChime();
+  }
 });
+
+// Timer timeout reference
+let timerTimeout = null;
+
+// Set precise timer using setTimeout (more accurate than alarms for short durations)
+function setTimerAlarm(endTime) {
+  // Clear any existing timer
+  if (timerTimeout) {
+    clearTimeout(timerTimeout);
+    timerTimeout = null;
+  }
+  chrome.alarms.clear('focusTimerEnd');
+  
+  if (endTime) {
+    const actualDelayMs = endTime - Date.now();
+    
+    if (actualDelayMs > 0) {
+      console.log(`⏰ Timer set for ${Math.round(actualDelayMs/1000)}s from now`);
+      
+      // Play chime 2 seconds early (separate from blocking end)
+      const chimeDelayMs = Math.max(0, actualDelayMs - 2000);
+      setTimeout(() => {
+        console.log('🔔 Playing chime');
+        playChime();
+      }, chimeDelayMs);
+      
+      // End blocking at actual time
+      timerTimeout = setTimeout(async () => {
+        console.log('⏰ Timer ended - disabling blocking');
+        await chrome.storage.sync.set({ 
+          blockingEnabled: false,
+          blockingEndTime: null,
+          blockingDuration: null
+        });
+        await updateBlockingRules(true);
+      }, actualDelayMs);
+      
+      // Also set alarm as backup (in case service worker sleeps)
+      const delayMinutes = Math.max(actualDelayMs / 60000, 0.01);
+      chrome.alarms.create('focusTimerEnd', { delayInMinutes: delayMinutes });
+    }
+  }
+}
 
 // Re-block tabs after extension reload
 async function reblockTabsAfterReload() {
@@ -114,6 +202,10 @@ async function checkBlockingTimer() {
         blockingDuration: null
       });
       await updateBlockingRules(true); // Sync tabs when timer expires
+      
+      // Play completion chime
+      playChime();
+      console.log('🔔 Focus session complete');
     }
   } catch (error) {
     console.error('Error checking blocking timer:', error);
@@ -140,19 +232,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   
+  if (message.action === 'playChime') {
+    playChime();
+    sendResponse({ success: true });
+    return true;
+  }
+  
+  
+  
   if (message.action === 'updateBlocking' || message.action === 'updateRules') {
-    console.log('🔄 Updating blocking rules due to message...');
+    console.log('🔄 Updating blocking rules due to message:', message);
     // Wait a bit longer to ensure storage has been fully updated
     setTimeout(async () => {
+      console.log('🔄 Now calling updateBlockingRules...');
       await updateBlockingRules(true); // Sync tabs on user action
       // Verify rules were applied
       const rules = await chrome.declarativeNetRequest.getDynamicRules();
       console.log('Total dynamic rules after update:', rules.length);
     }, 200);
-    // If blocking is enabled with a timer, ensure we check it
-    if (message.action === 'updateBlocking' && message.enabled && message.endTime) {
-      // Timer will be checked by the interval, but we can also check immediately if needed
-      setTimeout(checkBlockingTimer, 1000);
+    // If blocking is enabled with a timer, set precise alarm
+    if (message.action === 'updateBlocking') {
+      if (message.enabled && message.endTime) {
+        setTimerAlarm(message.endTime);
+      } else if (!message.enabled) {
+        // Blocking disabled, clear timer alarm
+        chrome.alarms.clear('focusTimerEnd');
+        if (timerTimeout) {
+          clearTimeout(timerTimeout);
+          timerTimeout = null;
+        }
+      }
+      
+      // Broadcast to all tabs so content scripts update
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(tab => {
+          chrome.tabs.sendMessage(tab.id, { 
+            action: 'timerUpdated', 
+            endTime: message.endTime,
+            enabled: message.enabled
+          }).catch(() => {});
+        });
+      });
     }
   }
   sendResponse({ success: true });
@@ -290,35 +410,40 @@ async function updateBlockingRules(syncTabs = false) {
 // Sync open tabs with blocking rules
 async function syncOpenTabs(blockingEnabled, blockedSites) {
   try {
-    // Only need to inject blocker when enabling
-    // When disabling, the content script's storage listener handles overlay removal automatically
-    if (!blockingEnabled || blockedSites.length === 0) {
-      console.log('Blocking disabled - content scripts will auto-remove overlays');
-      return;
-    }
-    
     const tabs = await chrome.tabs.query({});
+    console.log(`🔄 syncOpenTabs: enabled=${blockingEnabled}, sites=${blockedSites.length}`);
     
     for (const tab of tabs) {
       if (!tab.url) continue;
+      
+      const isBlockedPage = tab.url.includes('blocked.html') && tab.url.includes(chrome.runtime.id);
+      
+      // If blocking is disabled, unblock blocked pages
+      if (!blockingEnabled || blockedSites.length === 0) {
+        if (isBlockedPage) {
+          console.log(`🔓 Unblocking tab ${tab.id}`);
+          chrome.tabs.goBack(tab.id).catch(() => {});
+        }
+        continue;
+      }
       
       // Skip chrome:// and extension pages
       if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) continue;
       
       // Check if tab URL matches any blocked site
+      const urlLower = tab.url.toLowerCase();
       const matchedSite = blockedSites.find(site => {
         if (site.startsWith('*')) {
-          const domain = site.substring(1).toLowerCase();
-          return tab.url.toLowerCase().includes(domain);
+          return urlLower.includes(site.substring(1).toLowerCase());
         } else if (site.startsWith('http://') || site.startsWith('https://')) {
-          return tab.url.toLowerCase().startsWith(site.toLowerCase());
+          return urlLower.startsWith(site.toLowerCase());
         } else {
-          return tab.url.toLowerCase().includes(site.toLowerCase());
+          return urlLower.includes(site.toLowerCase());
         }
       });
       
       if (matchedSite) {
-        console.log(`🔄 Blocking tab ${tab.id}:`, tab.url);
+        console.log(`🚫 Blocking tab ${tab.id}:`, tab.url);
         await injectBlockerScript(tab.id);
       }
     }

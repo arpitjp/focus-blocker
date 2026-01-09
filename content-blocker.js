@@ -82,13 +82,72 @@
     }
   }
 
-  // Storage change listener
+  // Storage change listener - handle enable/disable AND timer changes
   storageListener = (changes, areaName) => {
     if (changes.blockingEnabled && !changes.blockingEnabled.newValue) {
       removeOverlay();
+      return;
+    }
+    // If endTime changed, update the timer display
+    if (changes.blockingEndTime !== undefined) {
+      const newEndTime = changes.blockingEndTime.newValue;
+      updateTimerFromStorage(newEndTime);
     }
   };
   chrome.storage.onChanged.addListener(storageListener);
+  
+  // Listen for direct messages from background
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.action === 'timerUpdated') {
+      if (message.enabled === false) {
+        removeOverlay();
+      } else {
+        updateTimerFromStorage(message.endTime);
+      }
+    }
+  });
+  
+  // Update timer display from storage
+  function updateTimerFromStorage(endTime) {
+    const timerValue = document.getElementById('focus-blocker-timer-value');
+    if (!timerValue) return;
+    
+    // Clear existing interval
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    
+    if (!endTime) {
+      timerValue.textContent = '∞ Until you turn it off';
+      return;
+    }
+    
+    // Start new timer with updated endTime
+    const updateFn = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+      
+      if (remaining > 0) {
+        const hours = Math.floor(remaining / 3600);
+        const minutes = Math.floor((remaining % 3600) / 60);
+        const secs = remaining % 60;
+        
+        if (hours > 0) {
+          timerValue.textContent = `${hours}h ${minutes}m ${secs}s`;
+        } else if (minutes > 0) {
+          timerValue.textContent = `${minutes}m ${secs}s`;
+        } else {
+          timerValue.textContent = `${secs}s`;
+        }
+      } else {
+        removeOverlay();
+      }
+    };
+    
+    updateFn();
+    timerInterval = setInterval(updateFn, 1000);
+  }
 
   // Get blocking info from storage
   chrome.storage.sync.get(['blockingEnabled', 'blockedSites', 'blockingEndTime'], (syncResult) => {

@@ -2,7 +2,6 @@
 const params = new URLSearchParams(window.location.search);
 const site = params.get('site');
 const url = params.get('url');
-const endTime = params.get('endTime');
 
 // Display blocked site
 if (site) {
@@ -18,7 +17,7 @@ if (site) {
   document.getElementById('blockedSite').textContent = 'Website blocked';
 }
 
-// Timer functionality
+// Timer elements
 const timerEl = document.getElementById('timer');
 const timerValueEl = document.getElementById('timerValue');
 
@@ -38,40 +37,38 @@ function formatTime(seconds) {
   }
 }
 
-function updateTimer() {
-  if (!endTime) return;
+// Single tick function - reads from storage every time
+async function tick() {
+  const result = await chrome.storage.sync.get(['blockingEnabled', 'blockingEndTime']);
   
-  const now = Date.now();
-  const remaining = Math.max(0, Math.floor((parseInt(endTime) - now) / 1000));
+  // If blocking disabled, go back
+  if (!result.blockingEnabled) {
+    window.history.back();
+    return;
+  }
   
+  timerEl.style.display = 'block';
+  
+  const endTime = result.blockingEndTime;
+  if (!endTime) {
+    timerValueEl.innerHTML = '<span class="timer-infinite">∞ Until you turn it off</span>';
+    return;
+  }
+  
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
   if (remaining > 0) {
     timerValueEl.textContent = formatTime(remaining);
   } else {
-    timerValueEl.innerHTML = '<span class="timer-infinite">Blocking ended!</span>';
-    // Try to go to the original URL
-    if (url) {
-      setTimeout(() => {
-        window.location.href = url;
-      }, 1500);
-    }
+    timerValueEl.innerHTML = '<span class="timer-infinite">Session ended!</span>';
   }
 }
 
-// Show timer if endTime is provided
-if (endTime) {
-  timerEl.style.display = 'block';
-  updateTimer();
-  setInterval(updateTimer, 1000);
-} else {
-  // Show infinite message
-  timerEl.style.display = 'block';
-  timerValueEl.innerHTML = '<span class="timer-infinite">∞ Until you turn it off</span>';
-}
+// Run immediately and every second
+tick();
+setInterval(tick, 1000);
 
 // Open extension settings when clicking branding
 document.getElementById('openSettings').addEventListener('click', (e) => {
   e.preventDefault();
-  // Open the extension's options/popup page in a new tab
-  const extensionId = chrome.runtime.id;
-  chrome.tabs.create({ url: `chrome-extension://${extensionId}/popup.html` });
+  chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') });
 });

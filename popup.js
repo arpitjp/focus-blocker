@@ -11,6 +11,15 @@ const timerText = document.getElementById('timerText');
 
 let countdownInterval = null;
 
+// Listen for storage changes (when background disables blocking)
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.blockingEnabled && changes.blockingEnabled.newValue === false) {
+    blockingToggle.checked = false;
+    durationContainer.style.display = 'none';
+    stopCountdown();
+  }
+});
+
 // Save to sync storage (persists across uninstall/reinstall with Chrome sync enabled)
 async function saveToStorage(data) {
   try {
@@ -114,11 +123,10 @@ function startCountdown(endTime) {
       timerText.textContent = `Auto-off in ${formatTimeRemaining(remaining)}`;
       timerText.style.display = 'block';
     } else {
-      timerText.style.display = 'none';
-      stopCountdown();
-      // Auto-disable blocking
-      blockingToggle.checked = false;
-      handleToggleChange();
+      timerText.textContent = 'Ending...';
+      timerText.style.display = 'block';
+      // Don't auto-disable here - let background handle it
+      // This prevents race conditions with the background timer
     }
   };
   
@@ -145,7 +153,7 @@ function getDurationMinutes() {
     const customMins = parseInt(customMinutes.value, 10);
     return customMins && customMins > 0 ? customMins : null;
   }
-  return parseInt(selectedValue, 10);
+  return parseFloat(selectedValue);
 }
 
 // Display blocked sites list
@@ -208,7 +216,7 @@ async function handleToggleChange() {
       });
       startCountdown(endTime);
       
-      // Notify background script with timer info
+      // Notify background script with timer info - this will re-sync all tabs
       chrome.runtime.sendMessage({ 
         action: 'updateBlocking', 
         enabled,
@@ -385,6 +393,77 @@ async function testBackgroundScript() {
     alert('Error: ' + error.message);
   }
 }
+
+// Export blocked sites to JSON file
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  const result = await chrome.storage.sync.get(['blockedSites']);
+  const blockedSites = result.blockedSites || [];
+  
+  if (blockedSites.length === 0) {
+    alert('No sites to export');
+    return;
+  }
+  
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    blockedSites: blockedSites
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `focus-mode-sites-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  
+  URL.revokeObjectURL(url);
+});
+
+// Import blocked sites from JSON file
+const importFile = document.getElementById('importFile');
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  importFile.click();
+});
+
+importFile.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    
+    // Validate the data
+    if (!data.blockedSites || !Array.isArray(data.blockedSites)) {
+      alert('Invalid file format');
+      return;
+    }
+    
+    // Get existing sites
+    const result = await chrome.storage.sync.get(['blockedSites']);
+    const existingSites = result.blockedSites || [];
+    
+    // Merge and dedupe
+    const allSites = [...new Set([...existingSites, ...data.blockedSites])];
+    
+    // Save
+    await saveToStorage({ blockedSites: allSites });
+    displayBlockedSites(allSites);
+    
+    // Notify background
+    chrome.runtime.sendMessage({ action: 'updateRules' });
+    
+    alert(`Imported ${data.blockedSites.length} sites (${allSites.length} total after merge)`);
+  } catch (error) {
+    alert('Error importing file: ' + error.message);
+  }
+  
+  // Reset file input
+  importFile.value = '';
+});
 
 // Initialize
 loadState();
