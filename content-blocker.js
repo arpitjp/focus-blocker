@@ -230,7 +230,7 @@
           align-items: center !important;
           justify-content: center !important;
           gap: 24px !important;
-          margin-bottom: 24px !important;
+          margin-bottom: 32px !important;
         }
         .focus-blocker-icon {
           width: 64px !important;
@@ -257,15 +257,15 @@
         .focus-blocker-subtitle {
           font-size: 17px !important;
           color: #a0aec0 !important;
-          margin-bottom: 40px !important;
+          margin-bottom: 56px !important;
           line-height: 1.6 !important;
         }
         .focus-blocker-info {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          gap: 20px !important;
-          margin-bottom: 48px !important;
+          gap: 24px !important;
+          margin-bottom: 64px !important;
           flex-wrap: wrap !important;
         }
         .focus-blocker-site {
