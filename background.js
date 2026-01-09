@@ -184,12 +184,21 @@ async function reblockTabsAfterReload() {
     const enabled = syncResult.blockingEnabled ?? localResult.blockingEnabled ?? false;
     const blockedSites = syncResult.blockedSites ?? localResult.blockedSites ?? [];
     
-    if (!enabled || blockedSites.length === 0) return;
-    
     const tabs = await chrome.tabs.query({});
     
     for (const tab of tabs) {
-      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) continue;
+      if (!tab.url || !tab.id) continue;
+      
+      // Refresh our own blocked.html pages that may have become invalid after extension reload
+      if (tab.url.includes('blocked.html') && tab.url.includes('chrome-extension://')) {
+        // Reload to restore the blocked page
+        chrome.tabs.reload(tab.id).catch(() => {});
+        continue;
+      }
+      
+      if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) continue;
+      
+      if (!enabled || blockedSites.length === 0) continue;
       
       const urlLower = tab.url.toLowerCase();
       const isBlocked = blockedSites.some(site => matchesSite(urlLower, site));

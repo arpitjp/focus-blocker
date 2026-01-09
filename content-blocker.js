@@ -408,17 +408,13 @@
           height: 100% !important;
           object-fit: contain !important;
         }
-        .focus-blocker-divider {
-          width: 1px !important;
-          height: 20px !important;
-          background: rgba(255,255,255,0.3) !important;
-          margin: 0 16px !important;
-        }
         .focus-blocker-coffee {
           display: inline-flex !important;
           align-items: center !important;
           text-decoration: none !important;
           transition: opacity 0.15s ease !important;
+          padding-left: 24px !important;
+          border-left: 1px solid rgba(255,255,255,0.8) !important;
         }
         .focus-blocker-coffee:hover {
           opacity: 0.8 !important;
@@ -456,7 +452,6 @@
           </div>
           <span>Focus Mode</span>
         </div>
-          <div class="focus-blocker-divider"></div>
           <a href="https://buymeacoffee.com/arpitjpn" target="_blank" class="focus-blocker-coffee">
             <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="20">
           </a>
