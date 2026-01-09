@@ -251,10 +251,12 @@
           background-clip: text !important;
         }
         .focus-blocker-subtitle {
-          font-size: 17px !important;
-          color: #a0aec0 !important;
+          font-size: 15px !important;
+          color: #8892a0 !important;
           margin-bottom: 56px !important;
-          line-height: 1.6 !important;
+          line-height: 1.5 !important;
+          letter-spacing: 0.2px !important;
+          font-weight: 400 !important;
         }
         .focus-blocker-info {
           display: flex !important;
