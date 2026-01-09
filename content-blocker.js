@@ -222,15 +222,15 @@
         }
         .focus-blocker-container {
           text-align: center !important;
-          padding: 48px !important;
-          max-width: 520px !important;
+          padding: 60px !important;
+          max-width: 580px !important;
         }
         .focus-blocker-icon {
-          width: 80px !important;
-          height: 80px !important;
-          margin: 0 auto 32px auto !important;
-          background: rgba(102, 126, 234, 0.2) !important;
-          border-radius: 20px !important;
+          width: 88px !important;
+          height: 88px !important;
+          margin: 0 auto 40px auto !important;
+          background: rgba(102, 126, 234, 0.15) !important;
+          border-radius: 24px !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
@@ -241,51 +241,51 @@
           50% { transform: scale(1.05); opacity: 0.8; }
         }
         .focus-blocker-icon svg {
-          width: 40px !important;
-          height: 40px !important;
+          width: 44px !important;
+          height: 44px !important;
         }
         .focus-blocker-title {
-          font-size: 32px !important;
+          font-size: 36px !important;
           font-weight: 700 !important;
-          margin-bottom: 16px !important;
+          margin-bottom: 20px !important;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
           -webkit-background-clip: text !important;
           -webkit-text-fill-color: transparent !important;
           background-clip: text !important;
         }
         .focus-blocker-subtitle {
-          font-size: 16px !important;
+          font-size: 17px !important;
           color: #a0aec0 !important;
-          margin-bottom: 32px !important;
+          margin-bottom: 40px !important;
           line-height: 1.6 !important;
         }
         .focus-blocker-site {
           display: inline-block !important;
-          background: rgba(102, 126, 234, 0.2) !important;
-          border: 1px solid rgba(102, 126, 234, 0.3) !important;
-          padding: 10px 24px !important;
-          border-radius: 20px !important;
-          font-size: 14px !important;
+          background: rgba(102, 126, 234, 0.15) !important;
+          border: 1px solid rgba(102, 126, 234, 0.25) !important;
+          padding: 12px 28px !important;
+          border-radius: 24px !important;
+          font-size: 15px !important;
           color: #667eea !important;
           font-weight: 500 !important;
-          margin-bottom: 32px !important;
+          margin-bottom: 40px !important;
         }
         .focus-blocker-timer {
-          background: rgba(102, 126, 234, 0.1) !important;
-          border: 1px solid rgba(102, 126, 234, 0.2) !important;
-          border-radius: 12px !important;
-          padding: 20px 32px !important;
-          margin-bottom: 32px !important;
+          background: rgba(102, 126, 234, 0.08) !important;
+          border: 1px solid rgba(102, 126, 234, 0.15) !important;
+          border-radius: 16px !important;
+          padding: 28px 48px !important;
+          margin-bottom: 40px !important;
         }
         .focus-blocker-timer-label {
-          font-size: 11px !important;
+          font-size: 12px !important;
           color: #718096 !important;
           text-transform: uppercase !important;
-          letter-spacing: 1px !important;
-          margin-bottom: 6px !important;
+          letter-spacing: 1.5px !important;
+          margin-bottom: 10px !important;
         }
         .focus-blocker-timer-value {
-          font-size: 24px !important;
+          font-size: 32px !important;
           font-weight: 700 !important;
           color: #667eea !important;
         }
@@ -293,21 +293,21 @@
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          gap: 8px !important;
+          gap: 10px !important;
           color: #4a5568 !important;
-          font-size: 12px !important;
+          font-size: 13px !important;
           cursor: pointer !important;
           transition: color 0.2s ease !important;
-          margin-bottom: 12px !important;
+          margin-bottom: 16px !important;
         }
         .focus-blocker-branding:hover {
           color: #667eea !important;
         }
         .focus-blocker-branding-icon {
-          width: 16px !important;
-          height: 16px !important;
+          width: 18px !important;
+          height: 18px !important;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-          border-radius: 3px !important;
+          border-radius: 4px !important;
         }
         .focus-blocker-coffee {
           display: inline-flex !important;
@@ -315,7 +315,7 @@
           justify-content: center !important;
           gap: 6px !important;
           color: #4a5568 !important;
-          font-size: 11px !important;
+          font-size: 12px !important;
           text-decoration: none !important;
           transition: color 0.15s ease !important;
           animation: focus-nudge 0.5s ease-in-out 0.6s !important;
