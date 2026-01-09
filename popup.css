@@ -359,69 +359,14 @@ h1 {
   font-weight: 500;
   padding: 5px 8px;
   color: var(--text-muted);
-  position: relative;
+  transition: color 0.15s ease;
 }
 
-.coffee-link .coffee-icon {
-  color: var(--text-muted);
-  animation: iconSheen 1.8s ease-in-out 0.5s forwards;
-}
-
-.coffee-link span {
-  background: linear-gradient(
-    90deg,
-    var(--text-muted) 0%,
-    var(--text-muted) 35%,
-    #f5c842 50%,
-    var(--text-muted) 65%,
-    var(--text-muted) 100%
-  );
-  background-size: 300% 100%;
-  background-position: 100% 0;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: textSheen 1.8s ease-in-out 0.5s forwards;
-}
-
-@keyframes iconSheen {
-  0%, 5% {
-    color: var(--text-muted);
-  }
-  15% {
-    color: #f5c842;
-  }
-  25%, 100% {
-    color: var(--text-muted);
-  }
-}
-
-@keyframes textSheen {
-  0% {
-    background-position: 100% 0;
-  }
-  20% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: 0% 0;
-  }
-}
-
-.coffee-link:hover .coffee-icon {
+.coffee-link:hover {
   color: #f5c842;
-  animation: none;
-}
-
-.coffee-link:hover span {
-  background: #f5c842;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: none;
 }
 
 .coffee-icon {
   width: 12px;
   height: 12px;
-  transition: color 0.15s ease;
 }
