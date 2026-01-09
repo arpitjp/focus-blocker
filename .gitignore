@@ -3,6 +3,12 @@
 *.pem
 .DS_Store
 
+# Build output
+dist/
+*.zip
+*.tar.gz
+node_modules/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -22,6 +28,3 @@ venv/
 
 # Logs
 *.log
-
-*.zip
-*.zip
