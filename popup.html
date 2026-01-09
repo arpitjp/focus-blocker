@@ -45,19 +45,27 @@
         <button id="addSiteBtn" class="add-btn">Add</button>
       </div>
       <ul id="blockedSitesList" class="sites-list"></ul>
-      <div class="import-export">
-        <button id="exportBtn" class="secondary-btn">Export</button>
-        <button id="importBtn" class="secondary-btn">Import</button>
-        <input type="file" id="importFile" accept=".json" style="display: none;">
-      </div>
     </div>
 
     <footer class="footer">
-      <a href="https://buymeacoffee.com/arpitjpn" target="_blank" class="coffee-link">
+      <div class="footer-actions">
+        <button id="exportBtn" class="icon-btn" title="Export sites">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+        </button>
+        <button id="importBtn" class="icon-btn" title="Import sites">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+        </button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+      </div>
+      <a href="https://buymeacoffee.com/arpitjpn" target="_blank" class="coffee-link" title="Support development">
         <svg class="coffee-icon" viewBox="0 0 24 24" fill="currentColor">
           <path d="M2 21V19H20V21H2ZM20 8V5H3V8H2V4H21V8H20ZM18 17H3V8H18V17ZM19 8H21C21.55 8 22.021 8.196 22.413 8.588C22.805 8.98 23.001 9.451 23.001 10V13C23.001 13.55 22.805 14.021 22.413 14.413C22.021 14.805 21.55 15.001 21 15.001H19V13.001H21V10H19V8Z"/>
         </svg>
-        Buy me a coffee
+        <span>Support</span>
       </a>
     </footer>
   </div>
