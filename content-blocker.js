@@ -222,15 +222,15 @@
         }
         .focus-blocker-container {
           text-align: center !important;
-          padding: 48px !important;
-          max-width: 600px !important;
+          padding: 60px !important;
+          max-width: 640px !important;
         }
         .focus-blocker-header {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          gap: 20px !important;
-          margin-bottom: 16px !important;
+          gap: 24px !important;
+          margin-bottom: 24px !important;
         }
         .focus-blocker-icon {
           width: 64px !important;
@@ -255,46 +255,46 @@
           background-clip: text !important;
         }
         .focus-blocker-subtitle {
-          font-size: 16px !important;
+          font-size: 17px !important;
           color: #a0aec0 !important;
-          margin-bottom: 32px !important;
-          line-height: 1.5 !important;
+          margin-bottom: 40px !important;
+          line-height: 1.6 !important;
         }
         .focus-blocker-info {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          gap: 24px !important;
-          margin-bottom: 36px !important;
+          gap: 20px !important;
+          margin-bottom: 48px !important;
           flex-wrap: wrap !important;
         }
         .focus-blocker-site {
           display: inline-block !important;
           background: rgba(102, 126, 234, 0.12) !important;
           border: 1px solid rgba(102, 126, 234, 0.2) !important;
-          padding: 10px 24px !important;
-          border-radius: 20px !important;
-          font-size: 14px !important;
+          padding: 14px 32px !important;
+          border-radius: 24px !important;
+          font-size: 15px !important;
           color: #667eea !important;
           font-weight: 500 !important;
         }
         .focus-blocker-timer {
           display: inline-flex !important;
           align-items: center !important;
-          gap: 12px !important;
+          gap: 14px !important;
           background: rgba(102, 126, 234, 0.08) !important;
           border: 1px solid rgba(102, 126, 234, 0.15) !important;
-          border-radius: 20px !important;
-          padding: 10px 24px !important;
+          border-radius: 24px !important;
+          padding: 14px 32px !important;
         }
         .focus-blocker-timer-label {
           font-size: 11px !important;
           color: #718096 !important;
           text-transform: uppercase !important;
-          letter-spacing: 1px !important;
+          letter-spacing: 1.2px !important;
         }
         .focus-blocker-timer-value {
-          font-size: 18px !important;
+          font-size: 20px !important;
           font-weight: 700 !important;
           color: #667eea !important;
         }
