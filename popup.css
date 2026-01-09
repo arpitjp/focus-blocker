@@ -354,47 +354,45 @@ h1 {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: var(--text-muted);
   text-decoration: none;
   font-size: 10px;
   font-weight: 500;
   padding: 5px 8px;
   transition: all 0.15s ease;
-  position: relative;
-  overflow: hidden;
 }
 
 .coffee-link span {
-  background: linear-gradient(
-    90deg,
-    var(--text-muted) 0%,
-    var(--text-muted) 40%,
-    #ffdd00 50%,
-    var(--text-muted) 60%,
-    var(--text-muted) 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: sheen 4s ease-in-out infinite;
-  animation-delay: 2s;
+  color: var(--text-muted);
+  position: relative;
+  display: inline-block;
+}
+
+.coffee-link span::after {
+  content: 'Buy me a coffee';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #ffdd00;
+  clip-path: inset(0 100% 0 0);
+  animation: sheen 3s ease-in-out infinite;
 }
 
 @keyframes sheen {
   0%, 100% {
-    background-position: 100% 0;
+    clip-path: inset(0 100% 0 0);
   }
-  50% {
-    background-position: -100% 0;
+  40%, 60% {
+    clip-path: inset(0 0 0 0);
   }
 }
 
 .coffee-link:hover span {
+  color: #ffdd00;
+}
+
+.coffee-link:hover span::after {
   animation: none;
-  background: #ffdd00;
-  -webkit-background-clip: text;
-  background-clip: text;
+  clip-path: inset(0 0 0 0);
 }
 
 .coffee-link:hover .coffee-icon {
@@ -404,5 +402,6 @@ h1 {
 .coffee-icon {
   width: 12px;
   height: 12px;
+  color: var(--text-muted);
   transition: color 0.15s ease;
 }
