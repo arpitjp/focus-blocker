@@ -14,6 +14,32 @@ let offscreenReady = false;
 let timerTimeout = null;
 let chimeTimeout = null;
 
+// Track tabs we've muted (stored in chrome.storage.local to persist across service worker restarts)
+async function getMutedTabs() {
+  try {
+    const result = await chrome.storage.local.get(['mutedByExtension']);
+    return new Set(result.mutedByExtension || []);
+  } catch {
+    return new Set();
+  }
+}
+
+async function addMutedTab(tabId) {
+  const muted = await getMutedTabs();
+  muted.add(tabId);
+  await chrome.storage.local.set({ mutedByExtension: [...muted] }).catch(() => {});
+}
+
+async function removeMutedTab(tabId) {
+  const muted = await getMutedTabs();
+  muted.delete(tabId);
+  await chrome.storage.local.set({ mutedByExtension: [...muted] }).catch(() => {});
+}
+
+async function clearAllMutedTabs() {
+  await chrome.storage.local.set({ mutedByExtension: [] }).catch(() => {});
+}
+
 async function ensureOffscreen() {
   if (offscreenReady) return;
   try {
@@ -383,18 +409,31 @@ async function syncOpenTabs(blockingEnabled, blockedSites) {
   try {
     const tabs = await chrome.tabs.query({});
     
-    for (const tab of tabs) {
-      if (!tab.url || !tab.id) continue;
-      
-      const isBlockedPage = tab.url.includes('blocked.html') && tab.url.includes(chrome.runtime.id);
-      
-      // If blocking is disabled, unblock blocked pages and unmute
-      if (!blockingEnabled || blockedSites.length === 0) {
+    // If blocking is disabled, unmute all tabs we muted and clear tracking
+    if (!blockingEnabled || blockedSites.length === 0) {
+      const mutedTabs = await getMutedTabs();
+      for (const tab of tabs) {
+        if (!tab.url || !tab.id) continue;
+        
+        // Unmute if we muted it
+        if (mutedTabs.has(tab.id)) {
+          chrome.tabs.update(tab.id, { muted: false }).catch(() => {});
+        }
+        
+        // Go back from blocked pages
+        const isBlockedPage = tab.url.includes('blocked.html') && tab.url.includes(chrome.runtime.id);
         if (isBlockedPage) {
           chrome.tabs.goBack(tab.id).catch(() => {});
         }
-        continue;
       }
+      // Clear all muted tabs tracking at once
+      await clearAllMutedTabs();
+      return;
+    }
+    
+    // Blocking is enabled - mute and block matching tabs
+    for (const tab of tabs) {
+      if (!tab.url || !tab.id) continue;
       
       // Skip chrome:// and extension pages
       if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) continue;
@@ -404,8 +443,9 @@ async function syncOpenTabs(blockingEnabled, blockedSites) {
       const isBlocked = blockedSites.some(site => matchesSite(urlLower, site));
       
       if (isBlocked) {
-        // Mute the tab immediately to stop audio
+        // Mute the tab immediately to stop audio (track that we muted it)
         chrome.tabs.update(tab.id, { muted: true }).catch(() => {});
+        await addMutedTab(tab.id);
         
         // Try to inject blocker script
         const injected = await injectBlockerScript(tab.id);
@@ -428,6 +468,11 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       updateBlockingRules(true);
     }
   }
+});
+
+// Clean up muted tabs tracking when tab is closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  removeMutedTab(tabId);
 });
 
 // Block websites using tabs.onUpdated listener
