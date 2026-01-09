@@ -360,13 +360,49 @@ h1 {
   font-weight: 500;
   padding: 5px 8px;
   transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.coffee-link:hover {
+.coffee-link span {
+  background: linear-gradient(
+    90deg,
+    var(--text-muted) 0%,
+    var(--text-muted) 40%,
+    #ffdd00 50%,
+    var(--text-muted) 60%,
+    var(--text-muted) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: sheen 4s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes sheen {
+  0%, 100% {
+    background-position: 100% 0;
+  }
+  50% {
+    background-position: -100% 0;
+  }
+}
+
+.coffee-link:hover span {
+  animation: none;
+  background: #ffdd00;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.coffee-link:hover .coffee-icon {
   color: #ffdd00;
 }
 
 .coffee-icon {
   width: 12px;
   height: 12px;
+  transition: color 0.15s ease;
 }
