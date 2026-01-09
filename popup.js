@@ -11,89 +11,76 @@ const timerText = document.getElementById('timerText');
 
 let countdownInterval = null;
 
-// Listen for storage changes (when background disables blocking)
-chrome.storage.onChanged.addListener((changes) => {
-  if (changes.blockingEnabled && changes.blockingEnabled.newValue === false) {
+// Single storage change listener for all updates
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'sync' && areaName !== 'local') return;
+  
+  // Handle blocking disabled by background
+  if (changes.blockingEnabled?.newValue === false) {
     blockingToggle.checked = false;
     durationContainer.style.display = 'none';
     stopCountdown();
+  }
+  
+  // Handle blocked sites updated (e.g., from sync)
+  if (changes.blockedSites?.newValue) {
+    displayBlockedSites(changes.blockedSites.newValue);
   }
 });
 
 // Save to sync storage (persists across uninstall/reinstall with Chrome sync enabled)
 async function saveToStorage(data) {
   try {
-    // Save to sync storage - this persists across devices and reinstalls
     await chrome.storage.sync.set(data);
-    console.log('Saved to sync storage:', Object.keys(data));
-  } catch (error) {
-    console.error('Error saving to sync storage:', error);
-    // If sync fails (quota exceeded, not signed in), data won't persist across reinstall
-    // But will work within the current install
+  } catch (e) {
+    // Sync failed - data won't persist across reinstall
+    // but will work within current install via local storage fallback
+    await chrome.storage.local.set(data).catch(() => {});
   }
 }
 
-// Load saved state from sync storage (persists across uninstall/reinstall with Chrome sync)
-async function loadState(retryCount = 0) {
-  // Get from sync storage - this persists across uninstall/reinstall if Chrome sync is enabled
-  const syncResult = await chrome.storage.sync.get(['blockingEnabled', 'blockedSites', 'blockingEndTime', 'blockingDuration', 'lastDurationOption', 'lastCustomMinutes']);
-  
-  // Check if sync has data
-  const hasSyncData = syncResult.blockedSites && syncResult.blockedSites.length > 0;
-  
-  // If no sync data and this is first load, retry after a delay (sync might not be ready yet)
-  if (!hasSyncData && retryCount < 3) {
-    console.log(`No sync data found, retrying... (attempt ${retryCount + 1})`);
-    setTimeout(() => loadState(retryCount + 1), 500);
-    if (retryCount === 0) {
-      // Show empty state immediately, will update when data arrives
-      displayBlockedSites([]);
+// Load saved state from sync storage
+async function loadState() {
+  try {
+    const syncResult = await chrome.storage.sync.get([
+      'blockingEnabled', 'blockedSites', 'blockingEndTime', 
+      'blockingDuration', 'lastDurationOption', 'lastCustomMinutes'
+    ]);
+    
+    const blockingEnabled = syncResult.blockingEnabled ?? false;
+    const blockedSites = syncResult.blockedSites ?? [];
+    const blockingEndTime = syncResult.blockingEndTime ?? null;
+    const blockingDuration = syncResult.blockingDuration ?? null;
+    const lastDurationOption = syncResult.lastDurationOption ?? 'infinite';
+    const lastCustomMinutes = syncResult.lastCustomMinutes ?? null;
+    
+    blockingToggle.checked = blockingEnabled;
+    displayBlockedSites(blockedSites);
+    
+    // Set the last selected duration option
+    durationSelect.value = lastDurationOption;
+    if (lastDurationOption === 'custom' && lastCustomMinutes) {
+      customMinutes.value = lastCustomMinutes;
+      customDuration.style.display = 'flex';
+    } else {
+      customDuration.style.display = 'none';
     }
-    return;
-  }
-  
-  const blockingEnabled = syncResult.blockingEnabled ?? false;
-  const blockedSites = syncResult.blockedSites ?? [];
-  const blockingEndTime = syncResult.blockingEndTime ?? null;
-  const blockingDuration = syncResult.blockingDuration ?? null;
-  const lastDurationOption = syncResult.lastDurationOption ?? 'infinite';
-  const lastCustomMinutes = syncResult.lastCustomMinutes ?? null;
-  
-  console.log('Loaded state from sync:', { blockingEnabled, blockedSites: blockedSites.length });
-  
-  blockingToggle.checked = blockingEnabled;
-  displayBlockedSites(blockedSites);
-  
-  // Always set the last selected duration option
-  durationSelect.value = lastDurationOption;
-  if (lastDurationOption === 'custom' && lastCustomMinutes) {
-    customMinutes.value = lastCustomMinutes;
-    customDuration.style.display = 'flex';
-  } else {
-    customDuration.style.display = 'none';
-  }
-  
-  // Show duration dropdown if enabled
-  if (blockingEnabled) {
-    durationContainer.style.display = 'block';
-    // Start countdown if there's an end time (not infinite)
-    if (blockingEndTime && blockingDuration !== 'infinite') {
-      startCountdown(blockingEndTime);
+    
+    // Show duration dropdown if enabled
+    if (blockingEnabled) {
+      durationContainer.style.display = 'block';
+      if (blockingEndTime && blockingDuration !== 'infinite') {
+        startCountdown(blockingEndTime);
+      }
+    } else {
+      durationContainer.style.display = 'none';
+      stopCountdown();
     }
-  } else {
-    durationContainer.style.display = 'none';
-    stopCountdown();
+  } catch (e) {
+    // Storage read failed - show empty state
+    displayBlockedSites([]);
   }
 }
-
-// Listen for storage changes (in case sync data arrives after initial load)
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'sync' && changes.blockedSites) {
-    console.log('Sync storage updated, reloading state...');
-    loadState();
-  }
-});
-
 
 // Format time remaining
 function formatTimeRemaining(seconds) {
@@ -126,7 +113,6 @@ function startCountdown(endTime) {
       timerText.textContent = 'Ending...';
       timerText.style.display = 'block';
       // Don't auto-disable here - let background handle it
-      // This prevents race conditions with the background timer
     }
   };
   
@@ -147,7 +133,7 @@ function stopCountdown() {
 function getDurationMinutes() {
   const selectedValue = durationSelect.value;
   if (selectedValue === 'infinite') {
-    return null; // No timer for infinite
+    return null;
   }
   if (selectedValue === 'custom') {
     const customMins = parseInt(customMinutes.value, 10);
@@ -160,7 +146,7 @@ function getDurationMinutes() {
 function displayBlockedSites(sites) {
   blockedSitesList.innerHTML = '';
   
-  if (sites.length === 0) {
+  if (!sites || sites.length === 0) {
     const emptyState = document.createElement('li');
     emptyState.className = 'empty-state';
     emptyState.textContent = 'No blocked sites. Add one above.';
@@ -190,24 +176,18 @@ async function handleToggleChange() {
   const enabled = blockingToggle.checked;
   const selectedDuration = durationSelect.value;
   
-  // Always save the last selected duration option
+  // Save the last selected duration option
   await saveToStorage({ 
     lastDurationOption: selectedDuration,
     lastCustomMinutes: selectedDuration === 'custom' ? customMinutes.value : null
   });
   
   if (enabled) {
-    // Show duration dropdown
     durationContainer.style.display = 'block';
-    
-    // Always enable blocking first
     await saveToStorage({ blockingEnabled: enabled });
-    chrome.runtime.sendMessage({ action: 'updateBlocking', enabled });
     
-    // Get duration and set timer if valid (null for infinite)
     const durationMinutes = getDurationMinutes();
     if (durationMinutes) {
-      // Timed blocking
       const endTime = Date.now() + (durationMinutes * 60 * 1000);
       await saveToStorage({ 
         blockingEndTime: endTime,
@@ -216,23 +196,23 @@ async function handleToggleChange() {
       });
       startCountdown(endTime);
       
-      // Notify background script with timer info - this will re-sync all tabs
+      // Notify background script with timer info
       chrome.runtime.sendMessage({ 
         action: 'updateBlocking', 
         enabled,
         endTime,
         duration: selectedDuration
-      });
+      }).catch(() => {});
     } else {
-      // Infinite or no valid duration - enable without timer
+      // Infinite or no valid duration
       await saveToStorage({ 
         blockingEndTime: null,
         blockingDuration: selectedDuration
       });
       stopCountdown();
+      chrome.runtime.sendMessage({ action: 'updateBlocking', enabled }).catch(() => {});
     }
   } else {
-    // Hide duration dropdown and stop timer
     durationContainer.style.display = 'none';
     customDuration.style.display = 'none';
     stopCountdown();
@@ -241,7 +221,7 @@ async function handleToggleChange() {
       blockingEndTime: null,
       blockingDuration: null
     });
-    chrome.runtime.sendMessage({ action: 'updateBlocking', enabled });
+    chrome.runtime.sendMessage({ action: 'updateBlocking', enabled }).catch(() => {});
   }
 }
 
@@ -252,7 +232,6 @@ blockingToggle.addEventListener('change', handleToggleChange);
 durationSelect.addEventListener('change', async () => {
   const selectedValue = durationSelect.value;
   
-  // Save the last selected option
   await saveToStorage({ 
     lastDurationOption: selectedValue,
     lastCustomMinutes: selectedValue === 'custom' ? customMinutes.value : null
@@ -263,24 +242,27 @@ durationSelect.addEventListener('change', async () => {
     customMinutes.focus();
   } else {
     customDuration.style.display = 'none';
-    // If blocking is already enabled, update the timer
     if (blockingToggle.checked) {
       handleToggleChange();
     }
   }
 });
 
-// Handle custom minutes input
-customMinutes.addEventListener('input', async () => {
-  // Save the custom minutes value
-  await saveToStorage({ lastCustomMinutes: customMinutes.value });
-  
-  if (blockingToggle.checked && durationSelect.value === 'custom') {
-    const minutes = getDurationMinutes();
-    if (minutes && minutes > 0) {
-      handleToggleChange();
+// Handle custom minutes input (debounced)
+let customMinutesTimeout = null;
+customMinutes.addEventListener('input', () => {
+  // Debounce to avoid excessive updates
+  if (customMinutesTimeout) clearTimeout(customMinutesTimeout);
+  customMinutesTimeout = setTimeout(async () => {
+    await saveToStorage({ lastCustomMinutes: customMinutes.value });
+    
+    if (blockingToggle.checked && durationSelect.value === 'custom') {
+      const minutes = getDurationMinutes();
+      if (minutes && minutes > 0) {
+        handleToggleChange();
+      }
     }
-  }
+  }, 300);
 });
 
 // Handle custom minutes enter key
@@ -294,6 +276,28 @@ customMinutes.addEventListener('keypress', (e) => {
   }
 });
 
+// Normalize site URL
+function normalizeSite(site) {
+  const trimmed = site.trim().toLowerCase();
+  
+  if (trimmed.startsWith('*')) {
+    return trimmed.replace(/\/$/, '');
+  }
+  
+  if (/^https?:\/\//.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      const domain = url.hostname.replace(/^www\./, '');
+      return '*' + domain;
+    } catch {
+      // Fall through to simple cleaning
+    }
+  }
+  
+  const cleaned = trimmed.replace(/^www\./, '').replace(/\/$/, '');
+  return '*' + cleaned;
+}
+
 // Add a site to blocked list
 addSiteBtn.addEventListener('click', async () => {
   const site = siteInput.value.trim();
@@ -302,77 +306,47 @@ addSiteBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Normalize the site (remove protocol, www, trailing slash)
   const normalizedSite = normalizeSite(site);
   
-  // Check both storages
-  const syncResult = await chrome.storage.sync.get(['blockedSites']);
-  const localResult = await chrome.storage.local.get(['blockedSites']);
-  const blockedSites = syncResult.blockedSites ?? localResult.blockedSites ?? [];
-  
-  if (blockedSites.includes(normalizedSite)) {
-    alert('This site is already blocked');
-    return;
-  }
+  try {
+    const result = await chrome.storage.sync.get(['blockedSites']);
+    const blockedSites = result.blockedSites ?? [];
+    
+    if (blockedSites.includes(normalizedSite)) {
+      alert('This site is already blocked');
+      return;
+    }
 
-  blockedSites.push(normalizedSite);
-  await saveToStorage({ blockedSites });
-  
-  siteInput.value = '';
-  displayBlockedSites(blockedSites);
-  
-  // Notify background script to update blocking rules
-  // Add a small delay to ensure storage is updated
-  setTimeout(() => {
-    chrome.runtime.sendMessage({ action: 'updateRules' });
-  }, 100);
+    blockedSites.push(normalizedSite);
+    await saveToStorage({ blockedSites });
+    
+    siteInput.value = '';
+    displayBlockedSites(blockedSites);
+    
+    // Notify background script
+    setTimeout(() => {
+      chrome.runtime.sendMessage({ action: 'updateRules' }).catch(() => {});
+    }, 50);
+  } catch (e) {
+    alert('Error adding site. Please try again.');
+  }
 });
 
 // Remove a site from blocked list
 async function removeSite(index) {
-  // Check both storages
-  const syncResult = await chrome.storage.sync.get(['blockedSites']);
-  const localResult = await chrome.storage.local.get(['blockedSites']);
-  const blockedSites = syncResult.blockedSites ?? localResult.blockedSites ?? [];
-  blockedSites.splice(index, 1);
-  await saveToStorage({ blockedSites });
-  displayBlockedSites(blockedSites);
-  
-  // Notify background script to update blocking rules
-  // Add a small delay to ensure storage is updated
-  setTimeout(() => {
-    chrome.runtime.sendMessage({ action: 'updateRules' });
-  }, 100);
-}
-
-// Normalize site URL
-// Always converts to *domain format for consistent blocking
-function normalizeSite(site) {
-  const trimmed = site.trim().toLowerCase();
-  
-  // Check if already has * prefix
-  if (trimmed.startsWith('*')) {
-    // Already wildcard format, just clean up
-    return trimmed.replace(/\/$/, '');
+  try {
+    const result = await chrome.storage.sync.get(['blockedSites']);
+    const blockedSites = result.blockedSites ?? [];
+    blockedSites.splice(index, 1);
+    await saveToStorage({ blockedSites });
+    displayBlockedSites(blockedSites);
+    
+    setTimeout(() => {
+      chrome.runtime.sendMessage({ action: 'updateRules' }).catch(() => {});
+    }, 50);
+  } catch (e) {
+    alert('Error removing site. Please try again.');
   }
-  
-  // Check if it has a protocol - extract domain
-  if (/^https?:\/\//.test(trimmed)) {
-    try {
-      const url = new URL(trimmed);
-      const domain = url.hostname.replace(/^www\./, '');
-      return '*' + domain;
-    } catch {
-      // If URL parsing fails, fall through to simple cleaning
-    }
-  }
-  
-  // No protocol - clean up and add * prefix
-  const cleaned = trimmed
-    .replace(/^www\./, '')
-    .replace(/\/$/, '');
-  
-  return '*' + cleaned;
 }
 
 // Allow Enter key to add site
@@ -382,43 +356,35 @@ siteInput.addEventListener('keypress', (e) => {
   }
 });
 
-// Test function to verify background script is running
-async function testBackgroundScript() {
-  try {
-    const response = await chrome.runtime.sendMessage({ action: 'test' });
-    console.log('Background script response:', response);
-    alert('Background script is running! Check console for details.');
-  } catch (error) {
-    console.error('Error communicating with background script:', error);
-    alert('Error: ' + error.message);
-  }
-}
-
 // Export blocked sites to JSON file
 document.getElementById('exportBtn').addEventListener('click', async () => {
-  const result = await chrome.storage.sync.get(['blockedSites']);
-  const blockedSites = result.blockedSites || [];
-  
-  if (blockedSites.length === 0) {
-    alert('No sites to export');
-    return;
+  try {
+    const result = await chrome.storage.sync.get(['blockedSites']);
+    const blockedSites = result.blockedSites || [];
+    
+    if (blockedSites.length === 0) {
+      alert('No sites to export');
+      return;
+    }
+    
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      blockedSites: blockedSites
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `focus-mode-sites-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Error exporting sites');
   }
-  
-  const data = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    blockedSites: blockedSites
-  };
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `focus-mode-sites-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  
-  URL.revokeObjectURL(url);
 });
 
 // Import blocked sites from JSON file
@@ -429,36 +395,33 @@ document.getElementById('importBtn').addEventListener('click', () => {
 });
 
 importFile.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
+  const file = e.target.files?.[0];
   if (!file) return;
   
   try {
     const text = await file.text();
     const data = JSON.parse(text);
     
-    // Validate the data
     if (!data.blockedSites || !Array.isArray(data.blockedSites)) {
       alert('Invalid file format');
       return;
     }
     
-    // Get existing sites
     const result = await chrome.storage.sync.get(['blockedSites']);
     const existingSites = result.blockedSites || [];
     
     // Merge and dedupe
     const allSites = [...new Set([...existingSites, ...data.blockedSites])];
     
-    // Save
     await saveToStorage({ blockedSites: allSites });
     displayBlockedSites(allSites);
     
-    // Notify background
-    chrome.runtime.sendMessage({ action: 'updateRules' });
+    chrome.runtime.sendMessage({ action: 'updateRules' }).catch(() => {});
     
-    alert(`Imported ${data.blockedSites.length} sites (${allSites.length} total after merge)`);
-  } catch (error) {
-    alert('Error importing file: ' + error.message);
+    const newCount = allSites.length - existingSites.length;
+    alert(`Imported ${newCount} new sites (${allSites.length} total)`);
+  } catch (e) {
+    alert('Error importing file: Invalid JSON format');
   }
   
   // Reset file input
@@ -467,7 +430,3 @@ importFile.addEventListener('change', async (e) => {
 
 // Initialize
 loadState();
-
-// Uncomment the line below to test background script communication
-// testBackgroundScript();
-

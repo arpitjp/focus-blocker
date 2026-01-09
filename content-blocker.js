@@ -9,41 +9,37 @@
   // Store references for cleanup
   let timerInterval = null;
   let storageListener = null;
-  let brandingClickHandler = null;
+  let messageListener = null;
   let mediaObserver = null;
   let mediaKillerInterval = null;
+  let currentEndTime = null;
 
   // Stop all media on the page
   function killAllMedia() {
     // Stop all video elements
-    document.querySelectorAll('video').forEach(video => {
+    const videos = document.getElementsByTagName('video');
+    for (let i = 0; i < videos.length; i++) {
+      const video = videos[i];
       video.pause();
       video.muted = true;
       video.src = '';
       video.srcObject = null;
-      video.load();
-    });
+    }
     
     // Stop all audio elements
-    document.querySelectorAll('audio').forEach(audio => {
+    const audios = document.getElementsByTagName('audio');
+    for (let i = 0; i < audios.length; i++) {
+      const audio = audios[i];
       audio.pause();
       audio.muted = true;
       audio.src = '';
       audio.srcObject = null;
-      audio.load();
-    });
+    }
     
     // Remove all iframes (YouTube embeds, etc.)
-    document.querySelectorAll('iframe').forEach(iframe => {
-      iframe.src = 'about:blank';
-    });
-    
-    // Stop any playing media via Web Audio API (if possible)
-    if (window.AudioContext) {
-      try {
-        const contexts = window.__audioContexts || [];
-        contexts.forEach(ctx => ctx.close && ctx.close());
-      } catch (e) {}
+    const iframes = document.getElementsByTagName('iframe');
+    for (let i = 0; i < iframes.length; i++) {
+      iframes[i].src = 'about:blank';
     }
   }
 
@@ -65,10 +61,9 @@
       chrome.storage.onChanged.removeListener(storageListener);
       storageListener = null;
     }
-    const branding = document.getElementById('focus-blocker-branding');
-    if (branding && brandingClickHandler) {
-      branding.removeEventListener('click', brandingClickHandler);
-      brandingClickHandler = null;
+    if (messageListener) {
+      chrome.runtime.onMessage.removeListener(messageListener);
+      messageListener = null;
     }
     window.__focusBlockerInitialized = false;
   }
@@ -82,71 +77,77 @@
     }
   }
 
-  // Storage change listener - handle enable/disable AND timer changes
+  // Storage change listener
   storageListener = (changes, areaName) => {
-    if (changes.blockingEnabled && !changes.blockingEnabled.newValue) {
+    if (areaName !== 'sync' && areaName !== 'local') return;
+    
+    if (changes.blockingEnabled?.newValue === false) {
       removeOverlay();
       return;
     }
-    // If endTime changed, update the timer display
     if (changes.blockingEndTime !== undefined) {
-      const newEndTime = changes.blockingEndTime.newValue;
-      updateTimerFromStorage(newEndTime);
+      updateTimerDisplay(changes.blockingEndTime.newValue);
     }
   };
   chrome.storage.onChanged.addListener(storageListener);
   
-  // Listen for direct messages from background
-  chrome.runtime.onMessage.addListener((message) => {
+  // Message listener for direct updates from background
+  messageListener = (message) => {
     if (message.action === 'timerUpdated') {
       if (message.enabled === false) {
         removeOverlay();
       } else {
-        updateTimerFromStorage(message.endTime);
+        updateTimerDisplay(message.endTime);
       }
     }
-  });
+  };
+  chrome.runtime.onMessage.addListener(messageListener);
   
-  // Update timer display from storage
-  function updateTimerFromStorage(endTime) {
+  // Update timer display
+  function updateTimerDisplay(endTime) {
+    currentEndTime = endTime;
     const timerValue = document.getElementById('focus-blocker-timer-value');
     if (!timerValue) return;
     
-    // Clear existing interval
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-    
     if (!endTime) {
       timerValue.textContent = '∞ Until you turn it off';
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
       return;
     }
     
-    // Start new timer with updated endTime
-    const updateFn = () => {
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-      
-      if (remaining > 0) {
-        const hours = Math.floor(remaining / 3600);
-        const minutes = Math.floor((remaining % 3600) / 60);
-        const secs = remaining % 60;
-        
-        if (hours > 0) {
-          timerValue.textContent = `${hours}h ${minutes}m ${secs}s`;
-        } else if (minutes > 0) {
-          timerValue.textContent = `${minutes}m ${secs}s`;
-        } else {
-          timerValue.textContent = `${secs}s`;
-        }
-      } else {
-        removeOverlay();
-      }
-    };
+    // Update immediately then start interval if not already running
+    updateTimerText(timerValue, endTime);
     
-    updateFn();
-    timerInterval = setInterval(updateFn, 1000);
+    if (!timerInterval) {
+      timerInterval = setInterval(() => {
+        if (currentEndTime) {
+          updateTimerText(timerValue, currentEndTime);
+        }
+      }, 1000);
+    }
+  }
+  
+  function updateTimerText(timerValue, endTime) {
+    const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+    
+    if (remaining > 0) {
+      const hours = Math.floor(remaining / 3600);
+      const minutes = Math.floor((remaining % 3600) / 60);
+      const secs = remaining % 60;
+      
+      if (hours > 0) {
+        timerValue.textContent = `${hours}h ${minutes}m ${secs}s`;
+      } else if (minutes > 0) {
+        timerValue.textContent = `${minutes}m ${secs}s`;
+      } else {
+        timerValue.textContent = `${secs}s`;
+      }
+    } else {
+      removeOverlay();
+    }
   }
 
   // Get blocking info from storage
@@ -166,8 +167,7 @@
       // Check if current site is blocked
       const matchedSite = blockedSites.find(site => {
         if (site.startsWith('*')) {
-          const domain = site.substring(1).toLowerCase();
-          return currentUrl.includes(domain);
+          return currentUrl.includes(site.substring(1).toLowerCase());
         } else if (site.startsWith('http://') || site.startsWith('https://')) {
           return currentUrl.startsWith(site.toLowerCase());
         } else {
@@ -185,29 +185,21 @@
   });
 
   function showBlockedOverlay(site, endTime) {
-    // Check if overlay already exists
     if (document.getElementById('focus-blocker-overlay')) return;
 
-    // IMMEDIATELY kill all media
+    // Kill all media immediately
     killAllMedia();
     
-    // Keep killing media periodically (in case site tries to restart it)
-    mediaKillerInterval = setInterval(killAllMedia, 500);
+    // Keep killing media periodically (reduced frequency)
+    mediaKillerInterval = setInterval(killAllMedia, 2000);
     
-    // Watch for new media elements being added
-    mediaObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.addedNodes.length) {
-          killAllMedia();
-        }
-      }
-    });
-    mediaObserver.observe(document.documentElement, { 
-      childList: true, 
-      subtree: true 
-    });
+    // Watch for new media elements - only watch body, not entire document
+    mediaObserver = new MutationObserver(() => killAllMedia());
+    if (document.body) {
+      mediaObserver.observe(document.body, { childList: true, subtree: true });
+    }
 
-    // Create overlay container
+    // Create overlay
     const overlay = document.createElement('div');
     overlay.id = 'focus-blocker-overlay';
     overlay.innerHTML = `
@@ -339,57 +331,19 @@
     `;
 
     document.documentElement.appendChild(overlay);
-
-    // Prevent scrolling on the underlying page
     document.body.style.overflow = 'hidden';
 
     // Start timer if there's an end time
     if (endTime) {
-      updateTimer(endTime);
-      timerInterval = setInterval(() => updateTimer(endTime), 1000);
+      updateTimerDisplay(endTime);
     }
 
-    // Handle branding click - store reference for cleanup
-    brandingClickHandler = () => {
-      chrome.runtime.sendMessage({ action: 'openPopup' });
-    };
+    // Handle branding click
     const branding = document.getElementById('focus-blocker-branding');
     if (branding) {
-      branding.addEventListener('click', brandingClickHandler);
-    }
-  }
-
-  function updateTimer(endTime) {
-    const timerValue = document.getElementById('focus-blocker-timer-value');
-    if (!timerValue) {
-      // Element gone, clean up interval
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      return;
-    }
-
-    const now = Date.now();
-    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-
-    if (remaining > 0) {
-      const hours = Math.floor(remaining / 3600);
-      const minutes = Math.floor((remaining % 3600) / 60);
-      const secs = remaining % 60;
-
-      let timeStr;
-      if (hours > 0) {
-        timeStr = `${hours}h ${minutes}m ${secs}s`;
-      } else if (minutes > 0) {
-        timeStr = `${minutes}m ${secs}s`;
-      } else {
-        timeStr = `${secs}s`;
-      }
-      timerValue.textContent = timeStr;
-    } else {
-      // Timer expired - remove overlay and clean up
-      removeOverlay();
+      branding.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: 'openPopup' }).catch(() => {});
+      });
     }
   }
 
@@ -399,3 +353,4 @@
     return div.innerHTML;
   }
 })();
+
