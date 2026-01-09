@@ -39,9 +39,17 @@ async function build() {
     console.log('📦 Bumping version...');
     const [major, minor, patch] = version.split('.').map(Number);
     version = `${major}.${minor}.${patch + 1}`;
+    
+    // Update manifest.json
     manifest.version = version;
     fs.writeFileSync('manifest.json', JSON.stringify(manifest, null, 2) + '\n');
-    console.log(`   ${manifest.version.replace(version, '')}${version}`);
+    
+    // Update package.json
+    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    pkg.version = version;
+    fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+    
+    console.log(`   ${version}`);
   } else {
     console.log(`📦 Version: ${version} (preview - no bump)`);
   }
@@ -94,13 +102,9 @@ async function build() {
     console.log(`   ✓ ${file}`);
   }
 
-  // Create archives
-  console.log('\n📦 Creating archives...');
-  const tarName = `focus-blocker-v${version}.tar.gz`;
+  // Create zip archive
+  console.log('\n📦 Creating archive...');
   const zipName = `focus-blocker-v${version}.zip`;
-  
-  execSync(`tar -czf ${tarName} -C ${DIST_DIR} .`, { stdio: 'pipe' });
-  console.log(`   ✓ ${tarName} (${(fs.statSync(tarName).size / 1024).toFixed(1)} KB)`);
   
   execSync(`cd ${DIST_DIR} && zip -rq ../${zipName} .`, { stdio: 'pipe' });
   console.log(`   ✓ ${zipName} (${(fs.statSync(zipName).size / 1024).toFixed(1)} KB)`);
@@ -119,8 +123,7 @@ async function build() {
   }
 
   console.log(`\n✅ ${isDeploy ? 'Deploy' : 'Preview'} complete! v${version}`);
-  console.log(`   📦 ${zipName} (for Chrome Web Store)`);
-  console.log(`   📦 ${tarName}\n`);
+  console.log(`   📦 ${zipName} (for Chrome Web Store)\n`);
 }
 
 build().catch(console.error);
