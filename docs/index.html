@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Mode - Block Distracting Websites</title>
+  <meta name="description" content="A Chrome extension that blocks distracting websites to help you stay focused. One-click blocking, stats tracking, 100% private.">
+  <link rel="icon" type="image/png" href="icon48.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #050508;
+      --bg-secondary: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a24;
+      --text-primary: #f0f0f5;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --accent: #5b7fff;
+      --accent-secondary: #a78bfa;
+      --accent-glow: rgba(91, 127, 255, 0.25);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .bg-glow::before,
+    .bg-glow::after {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.4;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .bg-glow::before {
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+      top: -200px;
+      right: -100px;
+    }
+
+    .bg-glow::after {
+      background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
+      bottom: -200px;
+      left: -100px;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 80px 24px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(91, 127, 255, 0.1);
+      border: 1px solid rgba(91, 127, 255, 0.2);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease backwards;
+    }
+
+    .hero-badge::before {
+      content: '✦';
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.9); }
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s ease 0.1s backwards;
+    }
+
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(91, 127, 255, 0.3);
+    }
+
+    .logo-text {
+      font-size: 48px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #5b7fff 0%, #a78bfa 50%, #5b7fff 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 3s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .hero-tagline {
+      font-size: 22px;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s ease 0.2s backwards;
+    }
+
+    .hero-tagline strong {
+      color: var(--text-primary);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s ease 0.3s backwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #5b7fff 0%, #a78bfa 100%);
+      color: white;
+      box-shadow: 0 4px 24px rgba(91, 127, 255, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #a78bfa 0%, #5b7fff 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .btn-primary span {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(91, 127, 255, 0.5);
+    }
+
+    .btn-primary:hover::before {
+      opacity: 1;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Screenshot Section */
+    .screenshot-section {
+      padding: 40px 0 80px;
+    }
+
+    .screenshot-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .screenshot {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      transition: transform 0.4s ease;
+    }
+
+    .screenshot:hover {
+      transform: translateY(-8px);
+    }
+
+    .screenshot img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .screenshot-popup {
+      max-width: 320px;
+    }
+
+    .screenshot-stats {
+      max-width: 560px;
+    }
+
+    /* Features Section */
+    .features {
+      padding: 80px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent-secondary), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(91, 127, 255, 0.2);
+      transform: translateY(-4px);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(91, 127, 255, 0.2) 0%, rgba(167, 139, 250, 0.2) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 24px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* CTA Section */
+    .cta {
+      padding: 80px 0;
+      text-align: center;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, rgba(91, 127, 255, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+      border: 1px solid rgba(91, 127, 255, 0.2);
+      border-radius: 24px;
+      padding: 64px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(91, 127, 255, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .cta-text {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .footer-brand {
+      font-size: 14px;
+      font-weight: 600;
+      background: linear-gradient(90deg, #5b7fff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--text-primary);
+    }
+
+    .footer-right {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Privacy Badge */
+    .privacy-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(91, 127, 255, 0.1);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--accent);
+      margin-top: 24px;
+    }
+
+    .privacy-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 60px 24px;
+        min-height: auto;
+      }
+
+      .logo-text {
+        font-size: 32px;
+      }
+
+      .logo-icon {
+        width: 48px;
+        height: 48px;
+      }
+
+      .hero-tagline {
+        font-size: 18px;
+      }
+
+      .section-title {
+        font-size: 28px;
+      }
+
+      .screenshot-wrapper {
+        gap: 24px;
+      }
+
+      .cta-card {
+        padding: 48px 24px;
+      }
+
+      .cta-title {
+        font-size: 24px;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    /* Scroll animations */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">Chrome Extension</div>
+      <div class="logo">
+        <img src="icon128.png" alt="Focus Mode" class="logo-icon">
+        <span class="logo-text">Focus Mode</span>
+      </div>
+      <p class="hero-tagline">
+        Block distracting websites. <strong>Stay focused.</strong><br>
+        No tracking. No ads. Just focus.
+      </p>
+      <div class="hero-actions">
+        <a href="https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn" class="btn btn-primary" target="_blank">
+          <span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0zM1.931 5.47A11.943 11.943 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-3.952 6.848a12.014 12.014 0 0 0 9.62-9.792A11.946 11.946 0 0 0 24 12c0-.063-.001-.126-.002-.189H15.27z"/>
+            </svg>
+            Add to Chrome — Free
+          </span>
+        </a>
+        <a href="https://github.com/AJ-Kulundu/focus-blocker" class="btn btn-secondary" target="_blank">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          View Source
+        </a>
+      </div>
+      <div class="privacy-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        100% Private — All data stays local
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="screenshot-section">
+    <div class="container">
+      <div class="screenshot-wrapper reveal">
+        <div class="screenshot screenshot-popup">
+          <img src="assets/popup.png" alt="Focus Mode Popup">
+        </div>
+        <div class="screenshot screenshot-stats">
+          <img src="assets/stats.png" alt="Focus Stats">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title reveal">Built for Deep Work</h2>
+      <p class="section-subtitle reveal">Simple tools to eliminate distractions</p>
+      
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">One-Click Blocking</h3>
+          <p class="feature-desc">Toggle focus mode instantly. No complicated settings to manage.</p>
+        </div>
+        
+        <div class="feature-card reveal">
+          <div class="feature-icon">🔒</div>
+          <h3 class="feature-title">Hold to Disable</h3>
+          <p class="feature-desc">Prevents accidental turn-off during sessions. Your focus is protected.</p>
+        </div>
+        
+        <div class="feature-card reveal">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Focus Stats</h3>
+          <p class="feature-desc">Track daily, weekly, and monthly focus time. See your streaks grow.</p>
+        </div>
+        
+        <div class="feature-card reveal">
+          <div class="feature-icon">⏱️</div>
+          <h3 class="feature-title">Flexible Timers</h3>
+          <p class="feature-desc">5 minutes to infinite. Custom durations for any work session.</p>
+        </div>
+        
+        <div class="feature-card reveal">
+          <div class="feature-icon">🎯</div>
+          <h3 class="feature-title">Smart Wildcards</h3>
+          <p class="feature-desc">Block entire domains or specific URLs. You control what gets blocked.</p>
+        </div>
+        
+        <div class="feature-card reveal">
+          <div class="feature-icon">🛡️</div>
+          <h3 class="feature-title">100% Private</h3>
+          <p class="feature-desc">No tracking, no analytics, no servers. Everything stays on your device.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container">
+      <div class="cta-card reveal">
+        <h2 class="cta-title">Ready to focus?</h2>
+        <p class="cta-text">Stop procrastinating. Start focusing. It's free.</p>
+        <div class="cta-actions">
+          <a href="https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn" class="btn btn-primary" target="_blank">
+            <span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0zM1.931 5.47A11.943 11.943 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-3.952 6.848a12.014 12.014 0 0 0 9.62-9.792A11.946 11.946 0 0 0 24 12c0-.063-.001-.126-.002-.189H15.27z"/>
+              </svg>
+              Install Now
+            </span>
+          </a>
+          <a href="https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn/reviews" class="btn btn-secondary" target="_blank">
+            ⭐ Rate Extension
+          </a>
+          <a href="https://buymeacoffee.com/arpitjpn" class="btn btn-secondary" target="_blank">
+            ☕ Buy Me A Coffee
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-left">
+          <img src="icon48.png" alt="Focus Mode" class="footer-logo">
+          <span class="footer-brand">Focus Mode</span>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/AJ-Kulundu/focus-blocker" class="footer-link" target="_blank">GitHub</a>
+          <a href="https://github.com/AJ-Kulundu/focus-blocker/blob/main/PRIVACY.md" class="footer-link" target="_blank">Privacy</a>
+          <a href="https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn/reviews" class="footer-link" target="_blank">Reviews</a>
+        </div>
+        <div class="footer-right">
+          Made with ☕ to help you stay focused
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal animation
+    const reveals = document.querySelectorAll('.reveal');
+    
+    const revealOnScroll = () => {
+      reveals.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        if (rect.top < windowHeight - 100) {
+          el.classList.add('visible');
+        }
+      });
+    };
+    
+    window.addEventListener('scroll', revealOnScroll);
+    window.addEventListener('load', revealOnScroll);
+  </script>
+</body>
+</html>
