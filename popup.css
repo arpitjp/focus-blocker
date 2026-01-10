@@ -249,7 +249,6 @@ h1 {
 .hold-hint {
   font-size: 10px;
   color: var(--text-muted);
-  font-style: italic;
 }
 
 .toggle-wrapper {
@@ -310,7 +309,6 @@ h1 {
 .active-label {
   font-size: 10px;
   color: var(--text-muted);
-  font-style: italic;
 }
 
 .toggle-input {
