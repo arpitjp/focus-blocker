@@ -30,7 +30,6 @@ A Chrome extension that blocks distracting websites to help you stay focused.
 - **Smart wildcards** — `*youtube.com` blocks all subdomains, `https://youtube.com` blocks exact match only, doesn't block `music.youtube.com`
 - **Minimal block page** — Clean overlay, no distractions
 - **Import/Export** — Backup and restore your settings and stats
-- **Syncs across devices** — Via your Google account
 - **100% private** — No data collection, no tracking, no ads, fully local
 
 ## Install

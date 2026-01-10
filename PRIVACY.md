@@ -43,7 +43,7 @@ Focus Mode does **not** use any third-party services, analytics platforms, or ex
 ## Open Source
 
 This extension is fully open source. You can review the complete source code at:
-https://github.com/arpitjp/focus-blocker
+https://github.com/arpitjp/focus-mode-chrome-extension
 
 ## Data Deletion
 
@@ -56,7 +56,7 @@ If we make changes to this privacy policy, we will update the "Last updated" dat
 ## Contact
 
 If you have questions about this privacy policy, please open an issue on GitHub:
-https://github.com/arpitjp/focus-blocker/issues
+https://github.com/arpitjp/focus-mode-chrome-extension/issues
 
 ---
 
