@@ -130,6 +130,8 @@
       flex-direction: column;
       align-items: center;
       margin-bottom: 48px;
+      will-change: transform, opacity;
+      transition: opacity 0.1s ease-out;
     }
 
     .logo {
@@ -258,7 +260,59 @@
       align-items: flex-start;
       gap: 40px;
       flex-wrap: wrap;
-      perspective: 1000px;
+      perspective: 1200px;
+      perspective-origin: center center;
+    }
+
+    /* Floating orbs */
+    .floating-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.3;
+      animation: floatOrb 20s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 300px;
+      height: 300px;
+      background: var(--accent);
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 200px;
+      height: 200px;
+      background: var(--accent-secondary);
+      top: 60%;
+      right: 15%;
+      animation-delay: -7s;
+    }
+
+    .orb-3 {
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      bottom: 20%;
+      left: 30%;
+      animation-delay: -14s;
+    }
+
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(50px, -30px) scale(1.1); }
+      50% { transform: translate(-20px, 50px) scale(0.9); }
+      75% { transform: translate(-40px, -20px) scale(1.05); }
     }
 
     .screenshot {
@@ -269,8 +323,9 @@
         0 32px 80px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
+      transition: box-shadow 0.4s ease, --tilt-x 0.2s ease, --tilt-y 0.2s ease;
       will-change: transform;
+      transform-style: preserve-3d;
     }
 
     .screenshot:hover {
@@ -288,20 +343,28 @@
 
     .screenshot-popup {
       max-width: 240px;
-      transform: translateY(var(--parallax-y, 0)) rotate(var(--parallax-rotate, 0deg));
-    }
-
-    .screenshot-popup:hover {
-      transform: translateY(var(--parallax-y, 0)) rotate(var(--parallax-rotate, 0deg)) scale(1.05);
+      transform: 
+        translateY(var(--parallax-y, 0)) 
+        translateX(var(--mouse-x, 0px))
+        translateZ(0)
+        rotate(var(--parallax-rotate, 0deg))
+        rotateX(var(--tilt-x, 0deg))
+        rotateY(var(--tilt-y, 0deg))
+        scale(var(--parallax-scale, 1));
+      transform-style: preserve-3d;
     }
 
     .screenshot-stats {
       max-width: 420px;
-      transform: translateY(var(--parallax-y2, 0)) rotate(calc(var(--parallax-rotate2, 0deg) * -1));
-    }
-
-    .screenshot-stats:hover {
-      transform: translateY(var(--parallax-y2, 0)) rotate(calc(var(--parallax-rotate2, 0deg) * -1)) scale(1.03);
+      transform: 
+        translateY(var(--parallax-y2, 0)) 
+        translateX(var(--mouse-x, 0px))
+        translateZ(0)
+        rotate(calc(var(--parallax-rotate2, 0deg) * -1))
+        rotateX(var(--tilt-x, 0deg))
+        rotateY(var(--tilt-y, 0deg))
+        scale(var(--parallax-scale2, 1));
+      transform-style: preserve-3d;
     }
 
     /* Features Section */
@@ -623,6 +686,13 @@
 <body>
   <div class="bg-glow"></div>
   
+  <!-- Floating orbs -->
+  <div class="floating-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  
   <!-- SVG Gradient Definition -->
   <svg width="0" height="0" style="position: absolute;">
     <defs>
@@ -781,41 +851,116 @@
   </footer>
 
   <script>
-    // Parallax effect on scroll
-    const parallaxElements = document.querySelectorAll('[data-parallax]');
+    // Elements
     const screenshotPopup = document.querySelector('.screenshot-popup');
     const screenshotStats = document.querySelector('.screenshot-stats');
+    const hero = document.querySelector('.hero');
+    const heroContent = document.querySelector('.hero-content');
+    const logoIcon = document.querySelector('.logo-icon');
+    const bgGlow = document.querySelector('.bg-glow');
     
+    // Scroll-based parallax
     const handleScroll = () => {
       const scrolled = window.scrollY;
+      const windowHeight = window.innerHeight;
       
-      // Parallax for screenshots - more dramatic effect
+      // Multi-layer screenshot parallax with scale
       if (screenshotPopup) {
-        const rate1 = 0.35;
-        const rotation1 = scrolled * 0.02;
-        screenshotPopup.style.setProperty('--parallax-y', `${scrolled * rate1}px`);
-        screenshotPopup.style.setProperty('--parallax-rotate', `${Math.min(rotation1, 8)}deg`);
+        const y1 = scrolled * 0.4;
+        const rotation1 = Math.min(scrolled * 0.025, 12);
+        const scale1 = 1 - Math.min(scrolled * 0.0003, 0.15);
+        screenshotPopup.style.setProperty('--parallax-y', `${y1}px`);
+        screenshotPopup.style.setProperty('--parallax-rotate', `${rotation1}deg`);
+        screenshotPopup.style.setProperty('--parallax-scale', scale1);
       }
       
       if (screenshotStats) {
-        const rate2 = 0.15;
-        const rotation2 = scrolled * 0.01;
-        screenshotStats.style.setProperty('--parallax-y2', `${scrolled * rate2}px`);
-        screenshotStats.style.setProperty('--parallax-rotate2', `${Math.min(rotation2, 5)}deg`);
+        const y2 = scrolled * 0.2;
+        const rotation2 = Math.min(scrolled * 0.015, 8);
+        const scale2 = 1 - Math.min(scrolled * 0.0002, 0.1);
+        screenshotStats.style.setProperty('--parallax-y2', `${y2}px`);
+        screenshotStats.style.setProperty('--parallax-rotate2', `${rotation2}deg`);
+        screenshotStats.style.setProperty('--parallax-scale2', scale2);
+      }
+      
+      // Hero content fades and moves up slower
+      if (heroContent) {
+        const opacity = Math.max(1 - scrolled * 0.002, 0);
+        const y = scrolled * 0.3;
+        heroContent.style.opacity = opacity;
+        heroContent.style.transform = `translateY(${y}px)`;
+      }
+      
+      // Background glow parallax
+      if (bgGlow) {
+        bgGlow.style.transform = `translateY(${scrolled * 0.1}px)`;
       }
       
       // Reveal animations
       document.querySelectorAll('.reveal').forEach(el => {
         const rect = el.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
         if (rect.top < windowHeight - 80) {
           el.classList.add('visible');
         }
       });
     };
     
-    // Smooth scroll performance
+    // 3D tilt effect on screenshots
+    const screenshots = document.querySelectorAll('.screenshot');
+    screenshots.forEach(screenshot => {
+      screenshot.addEventListener('mousemove', (e) => {
+        const rect = screenshot.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        
+        const tiltX = y * -20;
+        const tiltY = x * 20;
+        
+        screenshot.style.setProperty('--tilt-x', `${tiltX}deg`);
+        screenshot.style.setProperty('--tilt-y', `${tiltY}deg`);
+      });
+      
+      screenshot.addEventListener('mouseleave', () => {
+        screenshot.style.setProperty('--tilt-x', '0deg');
+        screenshot.style.setProperty('--tilt-y', '0deg');
+      });
+    });
+    
+    // Mouse parallax on hero elements
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+      
+      if (logoIcon) {
+        logoIcon.style.transform = `translate(${x * 15}px, ${y * 15}px) rotate(${x * 5}deg)`;
+      }
+      
+      // Move screenshots slightly with mouse
+      if (screenshotPopup) {
+        const currentY = parseFloat(getComputedStyle(screenshotPopup).getPropertyValue('--parallax-y')) || 0;
+        screenshotPopup.style.setProperty('--mouse-x', `${x * -20}px`);
+        screenshotPopup.style.setProperty('--mouse-y', `${y * -15}px`);
+      }
+      if (screenshotStats) {
+        screenshotStats.style.setProperty('--mouse-x', `${x * 15}px`);
+        screenshotStats.style.setProperty('--mouse-y', `${y * 10}px`);
+      }
+    });
+    
+    hero.addEventListener('mouseleave', () => {
+      if (logoIcon) logoIcon.style.transform = '';
+      if (screenshotPopup) {
+        screenshotPopup.style.setProperty('--mouse-x', '0px');
+        screenshotPopup.style.setProperty('--mouse-y', '0px');
+      }
+      if (screenshotStats) {
+        screenshotStats.style.setProperty('--mouse-x', '0px');
+        screenshotStats.style.setProperty('--mouse-y', '0px');
+      }
+    });
+    
+    // Smooth scroll with RAF
     let ticking = false;
     window.addEventListener('scroll', () => {
       if (!ticking) {
@@ -827,28 +972,7 @@
       }
     });
     
-    // Initial check
     window.addEventListener('load', handleScroll);
-    
-    // Subtle mouse parallax on hero
-    const hero = document.querySelector('.hero');
-    const logoIcon = document.querySelector('.logo-icon');
-    
-    hero.addEventListener('mousemove', (e) => {
-      const rect = hero.getBoundingClientRect();
-      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-      
-      if (logoIcon) {
-        logoIcon.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
-      }
-    });
-    
-    hero.addEventListener('mouseleave', () => {
-      if (logoIcon) {
-        logoIcon.style.transform = '';
-      }
-    });
   </script>
 </body>
 </html>
