@@ -13,6 +13,7 @@
   let mediaObserver = null;
   let mediaKillerInterval = null;
   let currentEndTime = null;
+  let scrollPreventHandler = null;
 
   // Stop all media on the page
   function killAllMedia() {
@@ -119,7 +120,21 @@
     if (overlay) {
       cleanup();
       overlay.remove();
-      document.body.style.overflow = '';
+      // Restore scrolling
+      if (document.body) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+      }
+      document.documentElement.style.overflow = '';
+      // Remove scroll prevention listeners
+      if (scrollPreventHandler) {
+        window.removeEventListener('scroll', scrollPreventHandler);
+        window.removeEventListener('wheel', scrollPreventHandler);
+        window.removeEventListener('touchmove', scrollPreventHandler);
+        scrollPreventHandler = null;
+      }
     }
   }
 
@@ -432,9 +447,12 @@
     try {
       if (document.body) {
         document.body.appendChild(overlay);
-        document.body.style.overflow = 'hidden';
+        // Prevent scrolling on both html and body
+        document.body.style.cssText += 'overflow: hidden !important; position: fixed !important; width: 100% !important; height: 100% !important;';
+        document.documentElement.style.cssText += 'overflow: hidden !important;';
       } else {
         document.documentElement.appendChild(overlay);
+        document.documentElement.style.cssText += 'overflow: hidden !important;';
       }
     } catch (e) {
       // Fallback: try documentElement
@@ -444,6 +462,12 @@
         console.error('Focus Mode: Could not show overlay', e2);
       }
     }
+    
+    // Also prevent scroll events
+    scrollPreventHandler = (e) => e.preventDefault();
+    window.addEventListener('scroll', scrollPreventHandler, { passive: false });
+    window.addEventListener('wheel', scrollPreventHandler, { passive: false });
+    window.addEventListener('touchmove', scrollPreventHandler, { passive: false });
 
     // Start timer if there's an end time
     if (endTime) {
