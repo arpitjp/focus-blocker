@@ -38,15 +38,13 @@ async function addToDailyStats(minutes) {
 // Finalize current session and add to stats
 async function finalizeSession() {
   try {
-    const result = await chrome.storage.sync.get(['blockingStartTime', 'blockingEnabled']);
+    const result = await chrome.storage.sync.get(['blockingStartTime']);
     const startTime = result.blockingStartTime;
     
     if (startTime) {
-      // Only count if blocking was actually enabled (prevents orphaned timestamps)
-      if (result.blockingEnabled) {
-        const minutes = Math.floor((Date.now() - startTime) / 60000);
-        await addToDailyStats(minutes);
-      }
+      // Record the session duration if there's a valid start time
+      const minutes = Math.floor((Date.now() - startTime) / 60000);
+      await addToDailyStats(minutes);
       await chrome.storage.sync.set({ blockingStartTime: null });
     }
   } catch (e) {}
