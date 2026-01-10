@@ -35,4 +35,4 @@ Happy working 🙂
 
 ---
 
-[Get Focus Mode on Chrome Web Store](https://chromewebstore.google.com/detail/focus-mode-block-distract/feaipmfphhfbjnmicpijdoaeefmmjdka)
+[Website](https://arpitjp.github.io/focus-mode-chrome-extension/) · [Get Focus Mode on Chrome Web Store](https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn)

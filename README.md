@@ -4,6 +4,9 @@ One simple thing, done well.
 
 A Chrome extension that blocks distracting websites to help you stay focused.
 
+<a href="https://arpitjp.github.io/focus-mode-chrome-extension/">
+  <img src="https://img.shields.io/badge/Website-Visit-8b5cf6" alt="Website">
+</a>
 <a href="https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn">
   <img src="https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=googlechrome" alt="Chrome Web Store">
 </a>
