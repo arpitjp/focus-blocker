@@ -1,4 +1,4 @@
-# I Built a Chrome Extension Because My Brain Is Great at Procrastinating
+# I Built a Chrome Extension Because My Brain keeps Procrastinating
 
 We all know the feeling: there’s work to do, but the brain just won’t stay on one thing.
 
