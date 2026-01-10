@@ -334,22 +334,36 @@
           isolation: isolate !important;
           color-scheme: dark !important;
         }
-        #focus-blocker-overlay::before {
+        #focus-blocker-overlay::before,
+        #focus-blocker-overlay::after {
           content: '' !important;
           position: absolute !important;
-          top: -50% !important;
-          left: -50% !important;
-          width: 200% !important;
-          height: 200% !important;
-          background: 
-            radial-gradient(ellipse at 30% 20%, rgba(91, 127, 255, 0.2) 0%, transparent 50%),
-            radial-gradient(ellipse at 70% 80%, rgba(167, 139, 250, 0.15) 0%, transparent 50%) !important;
+          width: 600px !important;
+          height: 600px !important;
+          border-radius: 50% !important;
+          filter: blur(150px) !important;
+          opacity: 0.35 !important;
           pointer-events: none !important;
-          animation: focusGlowFloat 20s ease-in-out infinite !important;
+          animation: focusGlowFloat 25s ease-in-out infinite !important;
+        }
+        #focus-blocker-overlay::before {
+          background: radial-gradient(circle, #5b7fff 0%, transparent 70%) !important;
+          top: -200px !important;
+          right: -150px !important;
+          left: auto !important;
+        }
+        #focus-blocker-overlay::after {
+          background: radial-gradient(circle, #a78bfa 0%, transparent 70%) !important;
+          bottom: -200px !important;
+          left: -150px !important;
+          top: auto !important;
+          right: auto !important;
+          animation-delay: -12s !important;
         }
         @keyframes focusGlowFloat {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(30px, -20px); }
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -20px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.95); }
         }
         #focus-blocker-overlay * {
           box-sizing: border-box !important;

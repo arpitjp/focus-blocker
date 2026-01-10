@@ -32,23 +32,36 @@
       mix-blend-mode: normal !important;
     }
     
-    body::before {
+    body::before,
+    body::after {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: 
-        radial-gradient(ellipse at 30% 20%, rgba(91, 127, 255, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 80%, rgba(167, 139, 250, 0.15) 0%, transparent 50%);
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.35;
       pointer-events: none;
-      animation: glowFloat 20s ease-in-out infinite;
+      animation: glowFloat 25s ease-in-out infinite;
+    }
+    
+    body::before {
+      background: radial-gradient(circle, #5b7fff 0%, transparent 70%);
+      top: -200px;
+      right: -150px;
+    }
+    
+    body::after {
+      background: radial-gradient(circle, #a78bfa 0%, transparent 70%);
+      bottom: -200px;
+      left: -150px;
+      animation-delay: -12s;
     }
     
     @keyframes glowFloat {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(30px, -20px); }
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
     }
     
     .container {
