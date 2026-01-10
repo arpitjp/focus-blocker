@@ -915,7 +915,14 @@
       .screenshot-popup,
       .screenshot-stats {
         animation: none;
-        transform: none !important;
+      }
+
+      /* Mobile parallax - simpler vertical-only movement */
+      .screenshot-popup {
+        transform: translateY(var(--parallax-y, 0)) !important;
+      }
+      .screenshot-stats {
+        transform: translateY(var(--parallax-y2, 0)) !important;
       }
 
       .screenshot-wrapper {
@@ -1294,12 +1301,12 @@
       
       // Multi-layer screenshot parallax - different speeds create depth
       if (screenshotPopup) {
-          const y1 = scrolled * 0.4;
+          const y1 = scrolled * 0.8;  // Stronger parallax
           screenshotPopup.style.setProperty('--parallax-y', `${y1}px`);
       }
       
       if (screenshotStats) {
-          const y2 = scrolled * 0.2;
+          const y2 = scrolled * 0.5;  // Stronger parallax
           screenshotStats.style.setProperty('--parallax-y2', `${y2}px`);
       }
       
