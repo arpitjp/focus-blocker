@@ -64,15 +64,13 @@ function updateToggleTitle(isBlocking) {
 
 function updateHoldHint(isBlocking) {
   const toggleText = document.querySelector('.toggle-text');
-  const activeLabel = document.getElementById('activeLabel');
+  const toggleHints = document.getElementById('toggleHints');
   if (isBlocking) {
-    holdHint.classList.add('visible');
+    toggleHints?.classList.add('visible');
     toggleText?.classList.add('active');
-    activeLabel?.classList.add('visible');
   } else {
-    holdHint.classList.remove('visible');
+    toggleHints?.classList.remove('visible');
     toggleText?.classList.remove('active');
-    activeLabel?.classList.remove('visible');
   }
 }
 

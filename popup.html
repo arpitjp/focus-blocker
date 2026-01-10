@@ -20,18 +20,16 @@
     
     <div class="toggle-section">
       <div class="toggle-row">
-        <div class="toggle-label-group">
-          <span class="toggle-text">Blocking</span>
-          <span class="active-label" id="activeLabel">ACTIVE</span>
+        <span class="toggle-text">Blocking</span>
+        <div class="toggle-wrapper" id="toggleWrapper">
+          <input type="checkbox" id="blockingToggle" class="toggle-input">
+          <span class="toggle-slider"></span>
+          <span class="hold-progress" id="holdProgress"></span>
         </div>
-        <div class="toggle-right">
-          <div class="toggle-wrapper" id="toggleWrapper">
-            <input type="checkbox" id="blockingToggle" class="toggle-input">
-            <span class="toggle-slider"></span>
-            <span class="hold-progress" id="holdProgress"></span>
-          </div>
-          <p class="hold-hint" id="holdHint">Hold to disable</p>
-        </div>
+      </div>
+      <div class="toggle-hints" id="toggleHints">
+        <span class="active-label" id="activeLabel">Active</span>
+        <span class="hold-hint" id="holdHint">Hold to disable</span>
       </div>
       <div class="duration-container" id="durationContainer" style="display: none;">
         <select id="durationSelect" class="duration-select">

@@ -231,34 +231,25 @@ h1 {
 
 .toggle-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
 }
 
-.toggle-label-group {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.toggle-hints {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
 }
 
-.toggle-right {
+.toggle-hints.visible {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
 }
 
 .hold-hint {
   font-size: 10px;
   color: var(--text-muted);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  display: none;
-}
-
-.hold-hint.visible {
-  opacity: 1;
-  display: block;
+  font-style: italic;
 }
 
 .toggle-wrapper {
@@ -319,15 +310,7 @@ h1 {
 .active-label {
   font-size: 10px;
   color: var(--text-muted);
-  opacity: 0;
-  display: none;
-  transition: opacity 0.2s ease;
-  letter-spacing: 0.5px;
-}
-
-.active-label.visible {
-  opacity: 1;
-  display: block;
+  font-style: italic;
 }
 
 .toggle-input {
