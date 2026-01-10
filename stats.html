@@ -424,10 +424,11 @@
       display: flex;
       align-items: center;
       text-decoration: none;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
-      color: var(--text-muted);
-      opacity: 0.85;
+      font-style: italic;
+      color: var(--text-primary);
+      opacity: 0.55;
       transition: all 0.15s ease;
     }
 
@@ -440,7 +441,7 @@
 
     .rate-link:hover {
       opacity: 1;
-      color: var(--text-secondary);
+      color: var(--text-primary);
     }
 
     .rate-link:hover::before {
@@ -453,7 +454,7 @@
       align-items: center;
       text-decoration: none;
       opacity: 0.85;
-      transition: opacity 0.2s ease;
+      transition: all 0.2s ease;
     }
 
     .coffee-link:hover {
@@ -461,11 +462,18 @@
     }
 
     .coffee-link img {
-      height: 20px;
+      height: 26px;
+      filter: grayscale(100%) invert(1) contrast(1.8) brightness(0.6) !important;
+      -webkit-filter: grayscale(100%) invert(1) contrast(1.8) brightness(0.6) !important;
+      transition: filter 0.2s ease;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .coffee-link:hover img {
       filter: none !important;
       -webkit-filter: none !important;
-      opacity: 1 !important;
-      mix-blend-mode: normal !important;
+      border-color: rgba(255, 221, 87, 0.3);
     }
   </style>
 </head>

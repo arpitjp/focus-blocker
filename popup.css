@@ -718,10 +718,11 @@ h1 {
     display: flex;
     align-items: center;
   text-decoration: none;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
-  color: var(--text-muted);
-  opacity: 0.85;
+  font-style: italic;
+  color: var(--text-primary);
+  opacity: 0.55;
   transition: all 0.15s ease;
   }
   
@@ -733,7 +734,7 @@ h1 {
   }
 .rate-link:hover {
   opacity: 1;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .rate-link:hover::before {
@@ -746,14 +747,26 @@ h1 {
   align-items: center;
   text-decoration: none;
   opacity: 0.85;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
 }
+
 .coffee-link:hover {
   opacity: 1;
 }
 
 .coffee-link img {
-  height: 18px;
+  height: 24px;
+  filter: grayscale(100%) invert(1) contrast(1.8) brightness(0.6) !important;
+  -webkit-filter: grayscale(100%) invert(1) contrast(1.8) brightness(0.6) !important;
+  transition: filter 0.2s ease;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.coffee-link:hover img {
+  filter: none !important;
+  -webkit-filter: none !important;
+  border-color: rgba(255, 221, 87, 0.3);
 }
 @keyframes nudge {
   0%, 100% {
