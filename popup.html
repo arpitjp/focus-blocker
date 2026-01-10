@@ -37,7 +37,18 @@
         </div>
       </div>
       <p class="timer-text" id="timerText" style="display: none;"></p>
+      <button class="stats-bar" id="statsBar" title="View insights">
+        <span class="stats-icon-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6" />
+          </svg>
+        </span>
+        <span class="stats-text" id="statsText"></span>
+        <span class="stats-arrow">›</span>
+      </button>
     </div>
+
+    <div class="section-divider"></div>
 
     <div class="blocked-sites-section">
       <h2>Blocked Websites <span class="info-icon"
@@ -51,12 +62,17 @@
 
     <footer class="footer">
       <div class="footer-actions">
-        <button id="exportBtn" class="icon-btn" title="Export sites">
+        <button id="statsFooterBtn" class="icon-btn" title="View stats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6" />
+          </svg>
+        </button>
+        <button id="exportBtn" class="icon-btn" title="Export data">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
         </button>
-        <button id="importBtn" class="icon-btn" title="Import sites">
+        <button id="importBtn" class="icon-btn" title="Import data">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
           </svg>

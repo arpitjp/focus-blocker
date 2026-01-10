@@ -4,6 +4,63 @@ const RULE_ID_START = 1;
 // Track if we've initialized
 let initialized = false;
 
+// Get today's date key for stats
+function getTodayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Add minutes to daily stats
+async function addToDailyStats(minutes) {
+  if (minutes <= 0) return;
+  
+  try {
+    const result = await chrome.storage.sync.get(['stats']);
+    const stats = result.stats || { daily: {}, totalMinutes: 0 };
+    const today = getTodayKey();
+    
+    stats.daily[today] = (stats.daily[today] || 0) + minutes;
+    stats.totalMinutes = (stats.totalMinutes || 0) + minutes;
+    
+    // Prune old daily data (keep last 90 days to stay within storage limits)
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 90);
+    const cutoffKey = cutoff.toISOString().split('T')[0];
+    for (const key of Object.keys(stats.daily)) {
+      if (key < cutoffKey) delete stats.daily[key];
+    }
+    
+    await chrome.storage.sync.set({ stats });
+  } catch (e) {
+    // Stats tracking is non-critical
+  }
+}
+
+// Finalize current session and add to stats
+async function finalizeSession() {
+  try {
+    const result = await chrome.storage.sync.get(['blockingStartTime', 'blockingEnabled']);
+    const startTime = result.blockingStartTime;
+    
+    if (startTime) {
+      // Only count if blocking was actually enabled (prevents orphaned timestamps)
+      if (result.blockingEnabled) {
+        const minutes = Math.floor((Date.now() - startTime) / 60000);
+        await addToDailyStats(minutes);
+      }
+      await chrome.storage.sync.set({ blockingStartTime: null });
+    }
+  } catch (e) {}
+}
+
+// Start a new session
+async function startSession() {
+  try {
+    // Finalize any existing session first (handles mid-session restarts)
+    await finalizeSession();
+    await chrome.storage.sync.set({ blockingStartTime: Date.now() });
+  } catch (e) {}
+}
+
 // Mutex to prevent concurrent rule updates
 let isUpdating = false;
 
@@ -111,6 +168,14 @@ async function initialize() {
     }
   } catch (e) {}
   
+  // Clean up orphaned blockingStartTime if blocking is disabled
+  try {
+    const result = await chrome.storage.sync.get(['blockingEnabled', 'blockingStartTime']);
+    if (!result.blockingEnabled && result.blockingStartTime) {
+      await chrome.storage.sync.set({ blockingStartTime: null });
+    }
+  } catch (e) {}
+  
   await updateBlockingRules();
   await checkBlockingTimer();
   await reblockTabsAfterReload();
@@ -125,7 +190,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     checkBlockingTimer();
   }
   if (alarm.name === 'focusTimerEnd') {
-    // Timer ended - disable blocking and play chime
+    // Timer ended - finalize session, disable blocking and play chime
+    await finalizeSession();
     try {
       await chrome.storage.sync.set({ 
         blockingEnabled: false,
@@ -163,6 +229,7 @@ function setTimerAlarm(endTime) {
   
   // End blocking at actual time
   timerTimeout = setTimeout(async () => {
+    await finalizeSession();
     try {
       await chrome.storage.sync.set({ 
         blockingEnabled: false,
@@ -247,6 +314,7 @@ async function checkBlockingTimer() {
     const blockingEndTime = syncResult.blockingEndTime ?? localResult.blockingEndTime ?? null;
     
     if (blockingEnabled && blockingEndTime && Date.now() >= blockingEndTime) {
+      await finalizeSession();
       await chrome.storage.sync.set({ 
         blockingEnabled: false,
         blockingEndTime: null,
@@ -283,31 +351,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   
   if (message.action === 'updateBlocking' || message.action === 'updateRules') {
-    // Defer to ensure storage is updated
-    setTimeout(async () => {
-      await updateBlockingRules(true);
-    }, 100);
-    
-    // Handle timer setup for updateBlocking
+    // Handle blocking state changes with stats tracking
     if (message.action === 'updateBlocking') {
-      if (message.enabled && message.endTime) {
-        setTimerAlarm(message.endTime);
-      } else if (!message.enabled) {
-        clearAllTimers();
-      }
-      
-      // Broadcast to all tabs
-      chrome.tabs.query({}, (tabs) => {
-        for (const tab of tabs) {
-          if (tab.id) {
-            chrome.tabs.sendMessage(tab.id, { 
-              action: 'timerUpdated', 
-              endTime: message.endTime,
-              enabled: message.enabled
-            }).catch(() => {});
+      (async () => {
+        if (message.enabled) {
+          await startSession();
+          if (message.endTime) {
+            setTimerAlarm(message.endTime);
           }
+        } else {
+          await finalizeSession();
+          clearAllTimers();
         }
-      });
+        
+        await updateBlockingRules(true);
+        
+        // Broadcast to all tabs
+        chrome.tabs.query({}, (tabs) => {
+          for (const tab of tabs) {
+            if (tab.id) {
+              chrome.tabs.sendMessage(tab.id, { 
+                action: 'timerUpdated', 
+                endTime: message.endTime,
+                enabled: message.enabled
+              }).catch(() => {});
+            }
+          }
+        });
+      })();
+    } else {
+      // Just updateRules
+      setTimeout(async () => {
+        await updateBlockingRules(true);
+      }, 100);
     }
   }
   
@@ -436,6 +512,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const isBlocked = blockedSites.some(site => matchesSite(urlLower, site));
     
     if (isBlocked) {
+      // Re-mute tab on reload (mute state resets on page load)
+      chrome.tabs.update(tabId, { muted: true }).catch(() => {});
+      await addMutedTab(tabId);
       await injectBlockerScript(tabId);
     }
   } catch (e) {

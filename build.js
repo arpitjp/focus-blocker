@@ -11,7 +11,8 @@ const FILES_TO_MINIFY = [
   'popup.js',
   'blocked.js',
   'content-blocker.js',
-  'offscreen.js'
+  'offscreen.js',
+  'stats.js'
 ];
 const FILES_TO_COPY = [
   'manifest.json',
@@ -19,6 +20,7 @@ const FILES_TO_COPY = [
   'popup.css',
   'blocked.html',
   'offscreen.html',
+  'stats.html',
   'icon16.png',
   'icon48.png',
   'icon128.png'

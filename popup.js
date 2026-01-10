@@ -8,9 +8,140 @@ const durationSelect = document.getElementById('durationSelect');
 const customDuration = document.getElementById('customDuration');
 const customMinutes = document.getElementById('customMinutes');
 const timerText = document.getElementById('timerText');
+const statsBar = document.getElementById('statsBar');
+const statsText = document.getElementById('statsText');
 
 let countdownInterval = null;
 
+// Stats click handlers - opens full stats page
+statsBar.addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') });
+});
+
+document.getElementById('statsFooterBtn').addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') });
+});
+
+// Format time for display
+function formatStatsTime(minutes) {
+  if (minutes < 60) {
+    return `${minutes} min`;
+  } else if (minutes < 1440) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  } else {
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  }
+}
+
+// Calculate streak from stats
+function calculateStreak(stats) {
+  let streakCount = 0;
+  const today = new Date();
+  let checkDate = new Date(today);
+  const todayKey = today.toISOString().split('T')[0];
+  
+  if (!stats.daily[todayKey]) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+  
+  while (true) {
+    const dateKey = checkDate.toISOString().split('T')[0];
+    if (stats.daily[dateKey] > 0) {
+      streakCount++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streakCount;
+}
+
+// Display stats highlight with meaningful facts
+async function displayStatsHighlight() {
+  try {
+    const result = await chrome.storage.sync.get(['stats', 'blockingEnabled', 'blockingStartTime']);
+    const stats = result.stats || { daily: {}, totalMinutes: 0 };
+    
+    let currentSessionMinutes = 0;
+    if (result.blockingEnabled && result.blockingStartTime) {
+      currentSessionMinutes = Math.floor((Date.now() - result.blockingStartTime) / 60000);
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayMinutes = (stats.daily[today] || 0) + currentSessionMinutes;
+    const totalMinutes = (stats.totalMinutes || 0) + currentSessionMinutes;
+    
+    let weekMinutes = 0;
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    for (const [date, mins] of Object.entries(stats.daily)) {
+      if (new Date(date) >= weekAgo) {
+        weekMinutes += mins;
+      }
+    }
+    weekMinutes += currentSessionMinutes;
+    
+    const focusDays = Object.keys(stats.daily).filter(d => stats.daily[d] > 0).length;
+    const avgDaily = focusDays > 0 ? Math.round(totalMinutes / focusDays) : 0;
+    
+    const highlights = [];
+    
+    // Neutral, informational stats - no gamification or strong CTAs
+    if (todayMinutes >= 60) {
+      highlights.push({ text: `<strong>${formatStatsTime(todayMinutes)}</strong> focused today`, priority: 2 });
+    } else if (todayMinutes > 0) {
+      highlights.push({ text: `<strong>${todayMinutes} min</strong> focused today`, priority: 3 });
+    }
+    
+    if (weekMinutes >= 60) {
+      highlights.push({ text: `<strong>${formatStatsTime(weekMinutes)}</strong> this week`, priority: 3 });
+    }
+    
+    if (totalMinutes >= 600) {
+      highlights.push({ text: `<strong>${formatStatsTime(totalMinutes)}</strong> total`, priority: 3 });
+    }
+    
+    if (focusDays >= 7) {
+      highlights.push({ text: `<strong>${focusDays} days</strong> tracked`, priority: 4 });
+    }
+    
+    if (avgDaily >= 30 && focusDays >= 3) {
+      highlights.push({ text: `<strong>${formatStatsTime(avgDaily)}</strong> avg per day`, priority: 4 });
+    }
+    
+    // Only show stats if user has completed at least one focus session AND blocking is OFF
+    const hasCompletedSession = totalMinutes > 0 || Object.keys(stats.daily).length > 0;
+    
+    // Hide stats when session is active - keep focus on the task
+    if (result.blockingEnabled) {
+      statsBar.style.display = 'none';
+      return;
+    }
+    
+    if (highlights.length > 0) {
+      // Show actual stats - use neutral language, no gamification
+      highlights.sort((a, b) => a.priority - b.priority);
+      const topPriority = highlights[0].priority;
+      const topHighlights = highlights.filter(h => h.priority === topPriority);
+      const chosen = topHighlights[Math.floor(Math.random() * topHighlights.length)];
+      statsText.innerHTML = chosen.text;
+      statsBar.style.display = 'flex';
+    } else if (hasCompletedSession) {
+      // Has some history but nothing notable to show
+      statsText.innerHTML = 'View focus insights';
+      statsBar.style.display = 'flex';
+    } else {
+      // No sessions yet - hide entirely (stats feel earned, not pushed)
+      statsBar.style.display = 'none';
+    }
+  } catch (e) {
+    statsBar.style.display = 'none';
+  }
+}
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
   const div = document.createElement('div');
@@ -22,11 +153,21 @@ function escapeHtml(text) {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'sync' && areaName !== 'local') return;
   
-  // Handle blocking disabled by background
-  if (changes.blockingEnabled?.newValue === false) {
-    blockingToggle.checked = false;
-    durationContainer.style.display = 'none';
-    stopCountdown();
+  // Handle blocking state changes
+  if (changes.blockingEnabled !== undefined) {
+    if (changes.blockingEnabled.newValue === false) {
+      blockingToggle.checked = false;
+      durationContainer.style.display = 'none';
+      stopCountdown();
+    } else {
+      blockingToggle.checked = true;
+    }
+    // Update stats bar visibility based on blocking state
+    displayStatsHighlight();
+    // Refresh blocked sites list to update delete button state
+    chrome.storage.sync.get(['blockedSites']).then(result => {
+      displayBlockedSites(result.blockedSites ?? []);
+    });
   }
   
   // Handle blocked sites updated (e.g., from sync)
@@ -256,7 +397,8 @@ async function handleToggleChange() {
     await saveToStorage({ 
       blockingEnabled: enabled,
       blockingEndTime: null,
-      blockingDuration: null
+      blockingDuration: null,
+      blockingStartTime: null  // Clear to prevent orphaned timestamps
     });
     chrome.runtime.sendMessage({ action: 'updateBlocking', enabled }).catch(() => {});
   }
@@ -393,21 +535,23 @@ siteInput.addEventListener('keypress', (e) => {
   }
 });
 
-// Export blocked sites to JSON file
+// Export blocked sites and stats to JSON file
 document.getElementById('exportBtn').addEventListener('click', async () => {
   try {
-    const result = await chrome.storage.sync.get(['blockedSites']);
+    const result = await chrome.storage.sync.get(['blockedSites', 'stats']);
     const blockedSites = result.blockedSites || [];
+    const stats = result.stats || { daily: {}, totalMinutes: 0 };
     
-    if (blockedSites.length === 0) {
-      alert('No sites to export');
+    if (blockedSites.length === 0 && stats.totalMinutes === 0) {
+      alert('No data to export');
       return;
     }
     
     const data = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
-      blockedSites: blockedSites
+      blockedSites: blockedSites,
+      stats: stats
     };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -415,12 +559,12 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
     
     const a = document.createElement('a');
     a.href = url;
-    a.download = `focus-mode-sites-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `focus-mode-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     
     URL.revokeObjectURL(url);
   } catch (e) {
-    alert('Error exporting sites');
+    alert('Error exporting data');
   }
 });
 
@@ -439,29 +583,68 @@ importFile.addEventListener('change', async (e) => {
     const text = await file.text();
     const data = JSON.parse(text);
     
-    if (!data.blockedSites || !Array.isArray(data.blockedSites)) {
+    // Handle both v1 (sites only) and v2 (sites + stats) formats
+    const hasBlockedSites = data.blockedSites && Array.isArray(data.blockedSites);
+    const hasStats = data.stats && typeof data.stats === 'object';
+    
+    if (!hasBlockedSites && !hasStats) {
       alert('Invalid file format');
       return;
     }
     
-    // Normalize imported sites
-    const normalizedImported = data.blockedSites
-      .map(site => normalizeSite(site))
-      .filter(site => site.length > 1); // Filter out invalid entries
+    const result = await chrome.storage.sync.get(['blockedSites', 'stats']);
+    let messages = [];
     
-    const result = await chrome.storage.sync.get(['blockedSites']);
-    const existingSites = result.blockedSites || [];
+    // Import blocked sites
+    if (hasBlockedSites) {
+      const normalizedImported = data.blockedSites
+        .map(site => normalizeSite(site))
+        .filter(site => site.length > 1);
+      
+      const existingSites = result.blockedSites || [];
+      const allSites = [...new Set([...existingSites, ...normalizedImported])];
+      
+      await saveToStorage({ blockedSites: allSites });
+      displayBlockedSites(allSites);
+      
+      const newSiteCount = allSites.length - existingSites.length;
+      messages.push(`${newSiteCount} new sites`);
+    }
     
-    // Merge and dedupe
-    const allSites = [...new Set([...existingSites, ...normalizedImported])];
-    
-    await saveToStorage({ blockedSites: allSites });
-    displayBlockedSites(allSites);
+    // Import stats (merge daily data, keep higher values)
+    if (hasStats && data.stats.daily) {
+      const existingStats = result.stats || { daily: {}, totalMinutes: 0 };
+      const mergedDaily = { ...existingStats.daily };
+      let addedMinutes = 0;
+      
+      for (const [date, mins] of Object.entries(data.stats.daily)) {
+        const existing = mergedDaily[date] || 0;
+        if (mins > existing) {
+          addedMinutes += (mins - existing);
+          mergedDaily[date] = mins;
+        }
+      }
+      
+      const mergedStats = {
+        daily: mergedDaily,
+        totalMinutes: existingStats.totalMinutes + addedMinutes
+      };
+      
+      await saveToStorage({ stats: mergedStats });
+      
+      if (addedMinutes > 0) {
+        messages.push(`${Math.round(addedMinutes)} min of stats`);
+      }
+    }
     
     chrome.runtime.sendMessage({ action: 'updateRules' }).catch(() => {});
+    displayStatsHighlight();
     
-    const newCount = allSites.length - existingSites.length;
-    alert(`Imported ${newCount} new sites (${allSites.length} total)`);
+    if (messages.length > 0) {
+      alert(`Imported: ${messages.join(', ')}`);
+    } else {
+      alert('No new data to import');
+    }
   } catch (e) {
     alert('Error importing file: Invalid JSON format');
   }
@@ -480,3 +663,4 @@ chrome.management.getSelf((info) => {
 
 // Initialize
 loadState();
+displayStatsHighlight();
