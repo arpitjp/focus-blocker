@@ -350,17 +350,13 @@
 
     /* Screenshot Section - Parallax */
     .screenshot-wrapper {
-      position: fixed;
-      bottom: -20%;
-      left: 0;
-      right: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       gap: 40px;
       flex-wrap: wrap;
-      z-index: 5;
-      pointer-events: none;
     }
 
     /* Floating orbs */
@@ -476,27 +472,24 @@
 
     @keyframes floatScreenshot {
       0%, 100% { transform: translateY(var(--parallax-y, 0)) rotateY(-8deg) rotateX(2deg); }
-      50% { transform: translateY(calc(var(--parallax-y, 0px) + 15px)) rotateY(-6deg) rotateX(4deg); }
+      50% { transform: translateY(calc(var(--parallax-y, 0px) - 20px)) rotateY(-6deg) rotateX(4deg); }
     }
 
     @keyframes floatScreenshot2 {
       0%, 100% { transform: translateY(var(--parallax-y2, 0)) rotateY(5deg) rotateX(-2deg); }
-      50% { transform: translateY(calc(var(--parallax-y2, 0px) + 10px)) rotateY(7deg) rotateX(0deg); }
+      50% { transform: translateY(calc(var(--parallax-y2, 0px) - 15px)) rotateY(7deg) rotateX(0deg); }
     }
 
 
     /* Features Section */
     .features {
-      padding: 120px 0;
-      margin-top: 40px;
-      position: relative;
-      z-index: 10;
-      background: var(--bg-primary);
+      padding: 80px 0;
+      margin-top: 20px;
     }
 
     .section-header {
       text-align: center;
-      margin-bottom: 64px;
+      margin-bottom: 48px;
     }
 
     .section-title {
@@ -605,11 +598,8 @@
 
     /* CTA Section */
     .cta {
-      padding: 100px 0;
+      padding: 60px 0;
       text-align: center;
-      position: relative;
-      z-index: 10;
-      background: var(--bg-primary);
     }
 
     .cta-card {
@@ -683,9 +673,6 @@
     .footer {
       padding: 48px 0;
       border-top: 1px solid var(--border-subtle);
-      position: relative;
-      z-index: 10;
-      background: var(--bg-primary);
     }
 
     .footer-content {
@@ -811,12 +798,9 @@
       }
 
       .screenshot-wrapper {
-        position: relative;
-        bottom: auto;
         flex-direction: column;
         align-items: center;
         gap: 24px;
-        z-index: 1;
       }
 
       .screenshot-popup,
@@ -1313,25 +1297,16 @@
         scrollProgress.style.width = `${progress}%`;
       }
       
-      // Multi-layer screenshot parallax - flows through page (desktop only)
+      // Multi-layer screenshot parallax - desktop only
       if (!isMobile) {
-        // Calculate how far through the page we've scrolled (0 to 1)
-        const scrollProgress = scrolled / docHeight;
-        
-        // Screenshots move UP as user scrolls, flowing through the page
-        // Start from bottom (positive translateY via CSS bottom: -20%), move to top
         if (screenshotPopup) {
-            const y1 = -scrolled * 0.6; // Moves faster
-            const opacity1 = Math.max(1 - scrollProgress * 1.2, 0);
+            const y1 = scrolled * 0.4;
             screenshotPopup.style.setProperty('--parallax-y', `${y1}px`);
-            screenshotPopup.style.opacity = opacity1;
         }
         
         if (screenshotStats) {
-            const y2 = -scrolled * 0.4; // Moves slower - creates depth
-            const opacity2 = Math.max(1 - scrollProgress * 1.1, 0);
+            const y2 = scrolled * 0.2;
             screenshotStats.style.setProperty('--parallax-y2', `${y2}px`);
-            screenshotStats.style.opacity = opacity2;
         }
       }
       
