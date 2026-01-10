@@ -692,8 +692,12 @@ h1 {
   font-weight: 500;
   padding: 5px 8px;
   color: var(--text-muted);
-  transition: color 0.15s ease;
-  animation: nudge 0.5s ease-in-out 0.4s;
+  opacity: 0.85;
+    transition: opacity 0.2s ease;
+  }
+  
+  .coffee-link:hover {
+    opacity: 1;
 }
 
 @keyframes nudge {
@@ -708,9 +712,6 @@ h1 {
   }
 }
 
-.coffee-link:hover {
-  color: #f5c842;
-}
 
 .coffee-icon {
   width: 12px;

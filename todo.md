@@ -8,9 +8,6 @@
 - promotion
   - reddit
   - twitter
-- features
-  - strict mode
-  - audio off
 - test it day to day
 - write a medium article maybe on this
 

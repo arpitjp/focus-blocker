@@ -410,25 +410,6 @@
           height: 100% !important;
           object-fit: contain !important;
         }
-        .focus-blocker-footer {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-        }
-        .focus-blocker-coffee {
-          display: inline-flex !important;
-          align-items: center !important;
-          text-decoration: none !important;
-          opacity: 0.9 !important;
-          transition: opacity 0.2s ease !important;
-        }
-        .focus-blocker-coffee:hover {
-          opacity: 1 !important;
-        }
-        .focus-blocker-coffee img {
-          height: 24px !important;
-          vertical-align: middle !important;
-        }
       </style>
       <div class="focus-blocker-container">
         <div class="focus-blocker-header">
@@ -439,11 +420,6 @@
             <h1 class="focus-blocker-title">Access to <span class="focus-blocker-site-name">${escapeHtml(site)}</span> is blocked</h1>
             <p class="focus-blocker-status" id="focus-blocker-status">Focus Mode active</p>
           </div>
-        </div>
-        <div class="focus-blocker-footer">
-          <a href="https://buymeacoffee.com/arpitjpn" target="_blank" class="focus-blocker-coffee">
-            <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee">
-          </a>
         </div>
       </div>
     `;
