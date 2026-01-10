@@ -2,51 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  
-  <!-- Primary Meta Tags -->
-  <title>Focus Mode - Block Distracting Websites | Chrome Extension</title>
-  <meta name="title" content="Focus Mode - Block Distracting Websites | Chrome Extension">
-  <meta name="description" content="Free Chrome extension to block distracting websites and stay focused. One-click blocking, focus stats, streak tracking. 100% private - no data collection.">
-  <meta name="keywords" content="focus mode, website blocker, productivity, chrome extension, block distractions, focus timer, site blocker, distraction blocker">
-  <meta name="author" content="Focus Mode">
-  <meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<!-- Primary Meta Tags -->
+<title>Focus Mode - Block Distracting Websites | Chrome Extension</title>
+<meta name="title" content="Focus Mode - Block Distracting Websites | Chrome Extension">
+<meta name="description"
+    content="Free Chrome extension to block distracting websites and stay focused. One-click blocking, focus stats, streak tracking. 100% private - no data collection.">
+<meta name="keywords"
+    content="focus mode, website blocker, productivity, chrome extension, block distractions, focus timer, site blocker, distraction blocker">
+<meta name="author" content="Focus Mode">
+<meta name="robots" content="index, follow">
   <meta name="color-scheme" content="only dark">
-  <meta name="theme-color" content="#050508">
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://arpitjp.github.io/focus-mode-chrome-extension/">
-  <meta property="og:title" content="Focus Mode - Block Distracting Websites">
-  <meta property="og:description" content="Free Chrome extension to block distracting websites and stay focused. One-click blocking, focus stats, 100% private.">
-  <meta property="og:image" content="https://arpitjp.github.io/focus-mode-chrome-extension/assets/stats.png">
-  <meta property="og:site_name" content="Focus Mode">
-  
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="https://arpitjp.github.io/focus-mode-chrome-extension/">
-  <meta name="twitter:title" content="Focus Mode - Block Distracting Websites">
-  <meta name="twitter:description" content="Free Chrome extension to block distracting websites and stay focused. One-click blocking, focus stats, 100% private.">
-  <meta name="twitter:image" content="https://arpitjp.github.io/focus-mode-chrome-extension/assets/stats.png">
-  
-  <!-- Canonical URL -->
-  <link rel="canonical" href="https://arpitjp.github.io/focus-mode-chrome-extension/">
-  
-  <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
-  <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
-  <link rel="apple-touch-icon" href="icon128.png">
-  
-  <!-- Preconnect for performance -->
+<meta name="theme-color" content="#050508">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://arpitjp.github.io/focus-mode-chrome-extension/">
+<meta property="og:title" content="Focus Mode - Block Distracting Websites">
+<meta property="og:description"
+    content="Free Chrome extension to block distracting websites and stay focused. One-click blocking, focus stats, 100% private.">
+<meta property="og:image" content="https://arpitjp.github.io/focus-mode-chrome-extension/assets/stats.png">
+<meta property="og:site_name" content="Focus Mode">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://arpitjp.github.io/focus-mode-chrome-extension/">
+<meta name="twitter:title" content="Focus Mode - Block Distracting Websites">
+<meta name="twitter:description"
+    content="Free Chrome extension to block distracting websites and stay focused. One-click blocking, focus stats, 100% private.">
+<meta name="twitter:image" content="https://arpitjp.github.io/focus-mode-chrome-extension/assets/stats.png">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="https://arpitjp.github.io/focus-mode-chrome-extension/">
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
+<link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
+<link rel="apple-touch-icon" href="icon128.png">
+
+<!-- Preconnect for performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://chromewebstore.google.com">
-  
-  <!-- Font with display swap for faster rendering -->
+<link rel="dns-prefetch" href="https://chromewebstore.google.com">
+
+<!-- Font with display swap for faster rendering -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Structured Data / JSON-LD -->
-  <script type="application/ld+json">
+<!-- Structured Data / JSON-LD -->
+<script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -345,6 +348,16 @@
     }
 
     /* Screenshot Section - Parallax */
+    .screenshot-container {
+      position: relative;
+      width: 100%;
+      max-height: 280px;
+      overflow: hidden;
+      margin-top: 40px;
+      mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    }
+
     .screenshot-wrapper {
       animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
       position: relative;
@@ -353,6 +366,7 @@
       align-items: flex-start;
       gap: 40px;
       flex-wrap: wrap;
+      padding-bottom: 100px;
     }
 
     /* Floating orbs */
@@ -766,6 +780,11 @@
         font-size: 14px;
       }
 
+      .screenshot-container {
+        max-height: 200px;
+        margin-top: 24px;
+      }
+
       .screenshot-wrapper {
         flex-direction: column;
         align-items: center;
@@ -967,14 +986,20 @@
   </style>
 </head>
 <body>
-  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
-  
-  <noscript>
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+<noscript>
     <style>
-      .reveal { opacity: 1 !important; transform: none !important; }
-      .scroll-progress { display: none; }
+        .reveal {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        .scroll-progress {
+            display: none;
+        }
     </style>
-  </noscript>
+</noscript>
   <div class="bg-glow"></div>
   
   <!-- Floating orbs -->
@@ -995,8 +1020,8 @@
   </svg>
 
   <!-- Hero with Screenshots -->
-  <main>
-  <section class="hero" aria-label="Introduction">
+<main>
+    <section class="hero" aria-label="Introduction">
     <div class="container">
       <div class="hero-content">
         <div class="logo">
@@ -1011,19 +1036,21 @@
         </a>
       </div>
       
-      <div class="screenshot-wrapper">
-        <div class="screenshot screenshot-popup" data-parallax="0.15">
-          <img src="assets/popup.png" alt="Focus Mode Popup - Website blocker interface" loading="eager" width="320" height="580">
-        </div>
-        <div class="screenshot screenshot-stats" data-parallax="0.08">
-          <img src="assets/stats.png" alt="Focus Mode Stats - Track your focus time" loading="eager" width="560" height="400">
+      <div class="screenshot-container">
+        <div class="screenshot-wrapper">
+          <div class="screenshot screenshot-popup" data-parallax="0.15">
+            <img src="assets/popup.png" alt="Focus Mode Popup - Website blocker interface" loading="eager" width="320" height="580">
+          </div>
+          <div class="screenshot screenshot-stats" data-parallax="0.08">
+            <img src="assets/stats.png" alt="Focus Mode Stats - Track your focus time" loading="eager" width="560" height="400">
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Features -->
-  <section class="features" aria-label="Features">
+<section class="features" aria-label="Features">
     <div class="container">
       <div class="section-header reveal">
         <h2 class="section-title">Built for Deep Work</h2>
@@ -1099,7 +1126,7 @@
   </section>
 
   <!-- CTA -->
-  <section class="cta" aria-label="Get Started">
+<section class="cta" aria-label="Get Started">
     <div class="container">
       <div class="cta-card reveal">
         <h2 class="cta-title">Ready to focus?</h2>
@@ -1122,7 +1149,7 @@
     </div>
   </section>
 
-  </main>
+</main>
 
   <!-- Footer -->
   <footer class="footer">
@@ -1203,7 +1230,7 @@
       });
     };
     
-    // Smooth scroll with RAF - passive for better performance
+        // Smooth scroll with RAF - passive for better performance
     let ticking = false;
     window.addEventListener('scroll', () => {
       if (!ticking) {
@@ -1215,13 +1242,13 @@
       }
     }, { passive: true });
     
-    // Initialize on load
+        // Initialize on load
     window.addEventListener('load', handleScroll);
-    
-    // Also run immediately if document is ready (for back navigation)
-    if (document.readyState === 'complete') {
-      handleScroll();
-    }
+
+        // Also run immediately if document is ready (for back navigation)
+        if (document.readyState === 'complete') {
+            handleScroll();
+        }
   </script>
 </body>
 </html>
