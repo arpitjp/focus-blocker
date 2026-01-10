@@ -90,27 +90,27 @@ async function displayStatsHighlight() {
     
     const highlights = [];
     
-    // Neutral, informational stats - no gamification or strong CTAs
+    // Stats highlights with celebration
     if (todayMinutes >= 60) {
-      highlights.push({ text: `<strong>${formatStatsTime(todayMinutes)}</strong> focused today`, priority: 2 });
+      highlights.push({ text: `Focused for <strong>${formatStatsTime(todayMinutes)}</strong> today 🎉`, priority: 2 });
     } else if (todayMinutes > 0) {
-      highlights.push({ text: `<strong>${todayMinutes} min</strong> focused today`, priority: 3 });
+      highlights.push({ text: `Focused for <strong>${todayMinutes} min</strong> today 🎉`, priority: 3 });
     }
     
     if (weekMinutes >= 60) {
-      highlights.push({ text: `<strong>${formatStatsTime(weekMinutes)}</strong> this week`, priority: 3 });
+      highlights.push({ text: `Focused for <strong>${formatStatsTime(weekMinutes)}</strong> this week 🎉`, priority: 3 });
     }
     
     if (totalMinutes >= 600) {
-      highlights.push({ text: `<strong>${formatStatsTime(totalMinutes)}</strong> total`, priority: 3 });
+      highlights.push({ text: `Focused for <strong>${formatStatsTime(totalMinutes)}</strong> total 🎉`, priority: 3 });
     }
     
     if (focusDays >= 7) {
-      highlights.push({ text: `<strong>${focusDays} days</strong> tracked`, priority: 4 });
+      highlights.push({ text: `Focused for <strong>${focusDays} days</strong> 🎉`, priority: 4 });
     }
     
     if (avgDaily >= 30 && focusDays >= 3) {
-      highlights.push({ text: `<strong>${formatStatsTime(avgDaily)}</strong> avg per day`, priority: 4 });
+      highlights.push({ text: `Focused <strong>${formatStatsTime(avgDaily)}</strong> avg per day 🎉`, priority: 4 });
     }
     
     // Only show stats if user has completed at least one focus session AND blocking is OFF
