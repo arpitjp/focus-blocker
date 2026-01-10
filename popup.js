@@ -3,6 +3,8 @@ const blockingToggle = document.getElementById('blockingToggle');
 const siteInput = document.getElementById('siteInput');
 const addSiteBtn = document.getElementById('addSiteBtn');
 const blockedSitesList = document.getElementById('blockedSitesList');
+const blockedSitesSection = document.getElementById('blockedSitesSection');
+const sitesDivider = document.getElementById('sitesDivider');
 const durationContainer = document.getElementById('durationContainer');
 const durationSelect = document.getElementById('durationSelect');
 const customDuration = document.getElementById('customDuration');
@@ -116,10 +118,15 @@ async function displayStatsHighlight() {
     // Only show stats if user has completed at least one focus session AND blocking is OFF
     const hasCompletedSession = totalMinutes > 0 || Object.keys(stats.daily).length > 0;
     
-    // Hide stats when session is active - keep focus on the task
+    // Hide stats and blocked sites when session is active - keep focus on the task
     if (result.blockingEnabled) {
       statsBar.style.display = 'none';
+      blockedSitesSection.style.display = 'none';
+      sitesDivider.style.display = 'none';
       return;
+    } else {
+      blockedSitesSection.style.display = 'block';
+      sitesDivider.style.display = 'block';
     }
     
     if (highlights.length > 0) {
