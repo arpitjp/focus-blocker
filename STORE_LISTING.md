@@ -11,9 +11,9 @@ Block distracting websites instantly. One-click toggle, custom timers, auto-unbl
 
 ## Description (for store listing)
 
-**🎯 Stay Focused. Get More Done.**
+**🎯 One simple thing, done well.**
 
-Focus Mode is a simple, powerful website blocker that helps you eliminate distractions and boost productivity. Whether you're working, studying, or trying to break bad browsing habits — Focus Mode keeps you on track.
+Focus Mode is a minimal, powerful website blocker that helps you eliminate distractions and stay focused. Whether you're working, studying, or trying to break bad browsing habits — it stays quiet and gets out of the way.
 
 **✨ Key Features:**
 

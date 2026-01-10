@@ -1,5 +1,7 @@
 # Focus Mode
 
+One simple thing, done well.
+
 A Chrome extension that blocks distracting websites to help you stay focused.
 
 <a href="https://chromewebstore.google.com/detail/focus-mode/ijgbeipckbajgnkjgdhoponeenjdnimn">
@@ -54,4 +56,4 @@ MIT License
 
 ---
 
-Made with ☕ to help you stay focused.
+Built for myself. Maybe useful for you too.

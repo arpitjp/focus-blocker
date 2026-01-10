@@ -10,7 +10,7 @@ So I stopped expecting willpower to save me and built a small Chrome extension i
 
 It does one simple thing: when you turn it on, it blocks the websites you waste time on. You set a timer, and those sites stop loading.
 
-That’s it.
+One simple thing, done well. That's it.
 
 I kept the design minimal because productivity tools can be distracting too. This one stays quiet and gets out of the way.
 
