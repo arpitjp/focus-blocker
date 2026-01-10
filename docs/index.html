@@ -121,7 +121,7 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 80px 24px 100px;
+      padding: 60px 24px 80px;
       position: relative;
     }
 
@@ -259,8 +259,6 @@
       align-items: flex-start;
       gap: 40px;
       flex-wrap: wrap;
-      perspective: 1200px;
-      perspective-origin: center center;
     }
 
     /* Floating orbs */
@@ -322,9 +320,8 @@
         0 32px 80px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      transition: box-shadow 0.4s ease, --tilt-x 0.2s ease, --tilt-y 0.2s ease;
+      transition: box-shadow 0.4s ease;
       will-change: transform;
-      transform-style: preserve-3d;
     }
 
     .screenshot:hover {
@@ -342,34 +339,19 @@
 
     .screenshot-popup {
       max-width: 320px;
-      transform: 
-        translateY(var(--parallax-y, 0)) 
-        translateX(var(--mouse-x, 0px))
-        translateZ(0)
-        rotate(var(--parallax-rotate, 0deg))
-        rotateX(var(--tilt-x, 0deg))
-        rotateY(var(--tilt-y, 0deg))
-        scale(var(--parallax-scale, 1));
-      transform-style: preserve-3d;
+      transform: translateY(var(--parallax-y, 0)) rotate(var(--parallax-rotate, 0deg));
     }
 
     .screenshot-stats {
       max-width: 560px;
-      transform: 
-        translateY(var(--parallax-y2, 0)) 
-        translateX(var(--mouse-x, 0px))
-        translateZ(0)
-        rotate(calc(var(--parallax-rotate2, 0deg) * -1))
-        rotateX(var(--tilt-x, 0deg))
-        rotateY(var(--tilt-y, 0deg))
-        scale(var(--parallax-scale2, 1));
-      transform-style: preserve-3d;
+      transform: translateY(var(--parallax-y2, 0)) rotate(calc(var(--parallax-rotate2, 0deg) * -1));
     }
 
 
     /* Features Section */
     .features {
-      padding: 100px 0;
+      padding: 120px 0;
+      margin-top: 40px;
     }
 
     .section-header {
@@ -854,9 +836,7 @@
     // Elements
     const screenshotPopup = document.querySelector('.screenshot-popup');
     const screenshotStats = document.querySelector('.screenshot-stats');
-    const hero = document.querySelector('.hero');
     const heroContent = document.querySelector('.hero-content');
-    const logoIcon = document.querySelector('.logo-icon');
     const bgGlow = document.querySelector('.bg-glow');
     
     // Scroll-based parallax
@@ -864,26 +844,24 @@
       const scrolled = window.scrollY;
       const windowHeight = window.innerHeight;
       
-      // Multi-layer screenshot parallax
+      // Multi-layer screenshot parallax - different speeds create depth
       if (screenshotPopup) {
-        const y1 = scrolled * 0.3;
-        const rotation1 = Math.min(scrolled * 0.02, 8);
+        const y1 = scrolled * 0.4;
+        const rotation1 = Math.min(scrolled * 0.025, 10);
         screenshotPopup.style.setProperty('--parallax-y', `${y1}px`);
         screenshotPopup.style.setProperty('--parallax-rotate', `${rotation1}deg`);
-        screenshotPopup.style.setProperty('--parallax-scale', 1);
       }
       
       if (screenshotStats) {
-        const y2 = scrolled * 0.15;
-        const rotation2 = Math.min(scrolled * 0.01, 5);
+        const y2 = scrolled * 0.2;
+        const rotation2 = Math.min(scrolled * 0.015, 6);
         screenshotStats.style.setProperty('--parallax-y2', `${y2}px`);
         screenshotStats.style.setProperty('--parallax-rotate2', `${rotation2}deg`);
-        screenshotStats.style.setProperty('--parallax-scale2', 1);
       }
       
-      // Hero content parallax (slower)
+      // Hero content stays mostly fixed - creates layered effect
       if (heroContent) {
-        const y = scrolled * 0.2;
+        const y = scrolled * 0.1;
         heroContent.style.transform = `translateY(${y}px)`;
       }
       
@@ -900,61 +878,6 @@
         }
       });
     };
-    
-    // 3D tilt effect on screenshots
-    const screenshots = document.querySelectorAll('.screenshot');
-    screenshots.forEach(screenshot => {
-      screenshot.addEventListener('mousemove', (e) => {
-        const rect = screenshot.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        
-        const tiltX = y * -20;
-        const tiltY = x * 20;
-        
-        screenshot.style.setProperty('--tilt-x', `${tiltX}deg`);
-        screenshot.style.setProperty('--tilt-y', `${tiltY}deg`);
-      });
-      
-      screenshot.addEventListener('mouseleave', () => {
-        screenshot.style.setProperty('--tilt-x', '0deg');
-        screenshot.style.setProperty('--tilt-y', '0deg');
-      });
-    });
-    
-    // Mouse parallax on hero elements
-    hero.addEventListener('mousemove', (e) => {
-      const rect = hero.getBoundingClientRect();
-      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-      
-      if (logoIcon) {
-        logoIcon.style.transform = `translate(${x * 15}px, ${y * 15}px) rotate(${x * 5}deg)`;
-      }
-      
-      // Move screenshots slightly with mouse
-      if (screenshotPopup) {
-        const currentY = parseFloat(getComputedStyle(screenshotPopup).getPropertyValue('--parallax-y')) || 0;
-        screenshotPopup.style.setProperty('--mouse-x', `${x * -20}px`);
-        screenshotPopup.style.setProperty('--mouse-y', `${y * -15}px`);
-      }
-      if (screenshotStats) {
-        screenshotStats.style.setProperty('--mouse-x', `${x * 15}px`);
-        screenshotStats.style.setProperty('--mouse-y', `${y * 10}px`);
-      }
-    });
-    
-    hero.addEventListener('mouseleave', () => {
-      if (logoIcon) logoIcon.style.transform = '';
-      if (screenshotPopup) {
-        screenshotPopup.style.setProperty('--mouse-x', '0px');
-        screenshotPopup.style.setProperty('--mouse-y', '0px');
-      }
-      if (screenshotStats) {
-        screenshotStats.style.setProperty('--mouse-x', '0px');
-        screenshotStats.style.setProperty('--mouse-y', '0px');
-      }
-    });
     
     // Smooth scroll with RAF
     let ticking = false;
