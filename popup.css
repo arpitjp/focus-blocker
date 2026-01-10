@@ -235,6 +235,21 @@ h1 {
   justify-content: space-between;
 }
 
+.hold-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: none;
+}
+
+.hold-hint.visible {
+  opacity: 1;
+  display: block;
+}
+
 .toggle-wrapper {
   position: relative;
   width: 44px;

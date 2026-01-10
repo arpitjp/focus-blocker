@@ -1,6 +1,7 @@
 // DOM elements
 const blockingToggle = document.getElementById('blockingToggle');
 const toggleWrapper = document.getElementById('toggleWrapper');
+const holdHint = document.getElementById('holdHint');
 const siteInput = document.getElementById('siteInput');
 const addSiteBtn = document.getElementById('addSiteBtn');
 const blockedSitesList = document.getElementById('blockedSitesList');
@@ -40,6 +41,7 @@ function startHold() {
     holdCompleted = true; // Prevent the subsequent click from turning it back on
     blockingToggle.checked = false;
     updateToggleTitle(false);
+    updateHoldHint(false);
     handleToggleChange();
   }, HOLD_DURATION);
 }
@@ -57,6 +59,14 @@ function updateToggleTitle(isBlocking) {
     toggleWrapper.title = 'Hold to disable blocking';
   } else {
     toggleWrapper.title = 'Click to enable blocking';
+  }
+}
+
+function updateHoldHint(isBlocking) {
+  if (isBlocking) {
+    holdHint.classList.add('visible');
+  } else {
+    holdHint.classList.remove('visible');
   }
 }
 
@@ -84,6 +94,7 @@ toggleWrapper.addEventListener('click', (e) => {
     // Blocking is OFF - turn ON immediately
     blockingToggle.checked = true;
     updateToggleTitle(true);
+    updateHoldHint(true);
     handleToggleChange();
   }
   // If blocking is ON, the hold logic handles turn-OFF
@@ -107,6 +118,7 @@ toggleWrapper.addEventListener('touchend', (e) => {
   if (!blockingToggle.checked) {
     blockingToggle.checked = true;
     updateToggleTitle(true);
+    updateHoldHint(true);
     handleToggleChange();
   }
 });
@@ -286,13 +298,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   
   // Handle blocking state changes
   if (changes.blockingEnabled !== undefined) {
-    if (changes.blockingEnabled.newValue === false) {
+    const isEnabled = changes.blockingEnabled.newValue;
+    if (isEnabled === false) {
       blockingToggle.checked = false;
       durationContainer.style.display = 'none';
       stopCountdown();
     } else {
       blockingToggle.checked = true;
     }
+    updateHoldHint(isEnabled);
     // Update stats bar visibility based on blocking state
     displayStatsHighlight();
     // Refresh blocked sites list to update delete button state
@@ -335,6 +349,7 @@ async function loadState() {
     
     blockingToggle.checked = blockingEnabled;
     updateToggleTitle(blockingEnabled);
+    updateHoldHint(blockingEnabled);
     displayBlockedSites(blockedSites);
     
     // Set the last selected duration option
