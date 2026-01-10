@@ -63,10 +63,13 @@ function updateToggleTitle(isBlocking) {
 }
 
 function updateHoldHint(isBlocking) {
+  const toggleText = document.querySelector('.toggle-text');
   if (isBlocking) {
     holdHint.classList.add('visible');
+    toggleText?.classList.add('active');
   } else {
     holdHint.classList.remove('visible');
+    toggleText?.classList.remove('active');
   }
 }
 

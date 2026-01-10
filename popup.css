@@ -294,6 +294,22 @@ h1 {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.toggle-text.active {
+  background: linear-gradient(90deg, #5b7fff, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+.toggle-text.active::after {
+  content: ' · ACTIVE';
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .toggle-input {
@@ -333,6 +349,15 @@ h1 {
     background-position: 200% 50%;
   }
 }
+
+@keyframes activeGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(91, 127, 255, 0.4), 0 0 30px rgba(167, 139, 250, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(91, 127, 255, 0.6), 0 0 50px rgba(167, 139, 250, 0.4);
+  }
+}
 .toggle-slider::before {
   content: '';
   position: absolute;
@@ -357,6 +382,8 @@ h1 {
 
 .toggle-input:checked + .toggle-slider {
   background: linear-gradient(90deg, #5b7fff, #a78bfa, #5b7fff);
+  box-shadow: 0 0 20px rgba(91, 127, 255, 0.5), 0 0 40px rgba(167, 139, 250, 0.3);
+  animation: activeGlow 2s ease-in-out infinite;
     background-size: 200% 100%;
     animation: borderFlow 2s linear infinite;
   }
