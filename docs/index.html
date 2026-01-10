@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Focus Mode - Block Distracting Websites</title>
   <meta name="description" content="A Chrome extension that blocks distracting websites to help you stay focused. One-click blocking, stats tracking, 100% private.">
+  <meta name="color-scheme" content="only dark">
   <link rel="icon" type="image/png" href="icon48.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* CSS Isolation - prevent browser dark mode interference */
     * {
       margin: 0;
       padding: 0;
@@ -29,18 +31,38 @@
       --accent-glow: rgba(91, 127, 255, 0.25);
       --border-subtle: rgba(255, 255, 255, 0.08);
       --glass-blur: 20px;
+      color-scheme: only dark;
     }
 
     html {
       scroll-behavior: smooth;
+      color-scheme: only dark;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Prevent forced colors (high contrast mode) from breaking design */
+    @media (forced-colors: active) {
+      * {
+        forced-color-adjust: none;
+      }
     }
 
     body {
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      background: var(--bg-primary) !important;
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
       line-height: 1.6;
       overflow-x: hidden;
+      isolation: isolate;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Reset any browser-applied filters */
+    img, svg, video {
+      filter: none !important;
+      -webkit-filter: none !important;
     }
 
     /* Animated background */
