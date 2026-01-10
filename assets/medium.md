@@ -23,11 +23,13 @@ Things I cared about:
 
 ![Focus Mode popup](popup.png)
 
+![Blocked page](blocked.png)
+
 ![Stats page](stats.png)
 
 I started building it for myself, but it turned out pretty great, so I figured someone else might find it useful too.
 
-If staying focused feels harder than it should, give it a try. Lemme know how it goes!
+Give it a try & lemme know how it goes!
 
 Happy working 🙂
 
