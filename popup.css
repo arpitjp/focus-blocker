@@ -199,22 +199,21 @@ h1 {
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.2px;
-  background: linear-gradient(90deg, #7b8fc9, #9a8fb8, #7b8fc9);
+  background: linear-gradient(90deg, #5b7fff, #a78bfa, #5b7fff);
     background-size: 200% 100%;
-    animation: borderFlowSlow 4s linear infinite;
+    animation: borderFlow 2s linear infinite;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  @keyframes borderFlowSlow {
-    0% {
-      background-position: 0% 50%;
-    }
-  
-    100% {
-      background-position: 200% 50%;
-    }
+
+@keyframes borderFlowSlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 .toggle-section {
