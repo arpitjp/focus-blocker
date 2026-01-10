@@ -627,55 +627,223 @@
     }
 
     /* Responsive */
+    /* Tablet */
     @media (max-width: 900px) {
       .features-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      
+      .screenshot-popup {
+        max-width: 260px;
+      }
+      
+      .screenshot-stats {
+        max-width: 440px;
       }
     }
 
+    /* Mobile */
     @media (max-width: 768px) {
+      .container {
+        padding: 0 16px;
+      }
+
       .hero {
-        padding: 80px 24px 60px;
+        padding: 60px 16px 40px;
         min-height: auto;
       }
 
+      .hero-content {
+        height: auto;
+        min-height: 45vh;
+        padding-top: 20px;
+      }
+
+      .logo {
+        flex-direction: column;
+        gap: 12px;
+      }
+
       .logo-text {
-        font-size: 36px;
+        font-size: 32px;
         letter-spacing: -1px;
       }
 
       .logo-icon {
-        width: 52px;
-        height: 52px;
+        width: 56px;
+        height: 56px;
       }
 
       .hero-tagline {
-        font-size: 18px;
+        font-size: 16px;
+        margin-bottom: 24px;
+      }
+
+      .btn {
+        padding: 14px 28px;
+        font-size: 15px;
+      }
+
+      .btn-primary::after {
+        display: none; /* Hide glow on mobile for performance */
       }
 
       .section-title {
-        font-size: 32px;
+        font-size: 24px;
+      }
+
+      .section-subtitle {
+        font-size: 14px;
       }
 
       .screenshot-wrapper {
-        gap: 24px;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .screenshot-popup,
+      .screenshot-stats {
+        max-width: 90%;
+        width: 100%;
+      }
+
+      .screenshot {
+        border-radius: 12px;
+      }
+
+      .features {
+        padding: 60px 0;
+        margin-top: 20px;
       }
 
       .features-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .feature-card {
+        padding: 20px;
+      }
+
+      .feature-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .feature-title {
+        font-size: 15px;
+      }
+
+      .feature-desc {
+        font-size: 13px;
+      }
+
+      /* Disable side animations on mobile */
+      .feature-card:nth-child(odd),
+      .feature-card:nth-child(even) {
+        transform: translateY(20px);
+      }
+      .feature-card.visible {
+        transform: translateY(0) !important;
+      }
+
+      .cta {
+        padding: 60px 0;
       }
 
       .cta-card {
-        padding: 48px 24px;
+        padding: 32px 20px;
+        border-radius: 16px;
       }
 
       .cta-title {
-        font-size: 28px;
+        font-size: 22px;
+      }
+
+      .cta-text {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+
+      .cta-actions {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .cta-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .footer {
+        padding: 32px 0;
       }
 
       .footer-content {
         flex-direction: column;
         text-align: center;
+        gap: 20px;
+      }
+
+      .footer-links {
+        gap: 20px;
+      }
+
+      .footer-right {
+        font-size: 12px;
+      }
+
+      /* Reduce animations on mobile for performance */
+      .orb {
+        display: none;
+      }
+
+      .bg-glow::before,
+      .bg-glow::after {
+        width: 300px;
+        height: 300px;
+        filter: blur(80px);
+        opacity: 0.2;
+      }
+
+      .screenshot-popup,
+      .screenshot-stats {
+        animation: none; /* Disable float animation */
+      }
+    }
+
+    /* Small phones */
+    @media (max-width: 480px) {
+      .hero {
+        padding: 40px 12px 30px;
+      }
+
+      .logo-text {
+        font-size: 28px;
+      }
+
+      .hero-tagline {
+        font-size: 15px;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+
+      .section-title {
+        font-size: 20px;
+      }
+
+      .cta-title {
+        font-size: 20px;
+      }
+
+      .feature-card {
+        padding: 16px;
       }
     }
 
